@@ -51,12 +51,13 @@ void trajectory_generator::compute_line_trj(trj_generator_input_msg& in, trj_gen
     dis_vector_p.data[0] = in.displacement.p.x();
     dis_vector_p.data[1] = in.displacement.p.y();
     dis_vector_p.data[2] = in.displacement.p.z();
-    in.displacement.M.GetRPY(ro,pi,ya);
-    dis_vector_r.data[0] = ro;
-    dis_vector_r.data[1] = pi;
-    dis_vector_r.data[2] = ya;
+    double ro_,pi_,ya_;
+    in.displacement.M.GetRPY(ro_,pi_,ya_);
+    dis_vector_r.data[0] = ro_;
+    dis_vector_r.data[1] = pi_;
+    dis_vector_r.data[2] = ya_;
 
-    std::cout<<"to ("<<in.displacement.p.x()<<' '<<in.displacement.p.y()<<' '<<in.displacement.p.z()<<' '<<ro<<' '<<pi<<' '<<ya<<") "<<std::endl;
+    std::cout<<"to ("<<in.displacement.p.x()<<' '<<in.displacement.p.y()<<' '<<in.displacement.p.z()<<' '<<ro_<<' '<<pi_<<' '<<ya_<<") in "<<in.time<<" [s]"<<std::endl;
     
 //     std::cout<<"(line ";
     
@@ -69,7 +70,7 @@ void trajectory_generator::compute_line_trj(trj_generator_input_msg& in, trj_gen
 	  temp_frame.p.x(temp_vector_p.data[0]);
 	  temp_frame.p.y(temp_vector_p.data[1]);
 	  temp_frame.p.z(temp_vector_p.data[2]);
-	  temp_frame.M.RPY(temp_vector_r.data[0],temp_vector_r.data[1],temp_vector_r.data[2]);
+	  temp_frame.M = KDL::Rotation::RPY(temp_vector_r.data[0],temp_vector_r.data[1],temp_vector_r.data[2]);
 	  
 	  
 	  out.trj[t] = temp_frame;
@@ -90,6 +91,7 @@ void trajectory_generator::run()
     if(command_input_interface.getCommand(in_msg,seq_num))
     {
         std::string command = in_msg.command;
+
         std::cout<<" - YARP: Command ["<<seq_num<<"] received: "<<command<<std::endl;
 	
 	if(command=="line")
