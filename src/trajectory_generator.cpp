@@ -13,7 +13,6 @@
  * limitations under the License.*/
 
 #include "trajectory_generator.h"
-#include <boost/concept_check.hpp>
 
 trajectory_generator::trajectory_generator(std::string module_prefix, yarp::os::ResourceFinder rf,std::shared_ptr<paramHelp::ParamHelperServer> ph)
 : generic_thread(module_prefix,rf,ph),command_input_interface(module_prefix),command_output_interface(module_prefix+"_out"),status_interface(module_prefix)
@@ -123,6 +122,7 @@ void trajectory_generator::compute_circle_trj(trj_generator_input_msg& in, trj_g
 //     std::cout<<"(circle ";
 	       
     double mean_x = (2*start_vector_p.data[0]+dis_vector_p.data[0])/2.0;
+    if((!in.hand) && (mean_x < 0)) Xf1=-Xf1;
     double mean_y = (2*start_vector_p.data[1]+dis_vector_p.data[1])/2.0;
     double mean_z = (2*start_vector_p.data[2]+dis_vector_p.data[2])/2.0;
 
