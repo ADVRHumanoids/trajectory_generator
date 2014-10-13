@@ -16,13 +16,13 @@
 #define TRJ_GEN_MOD_H
 
 #include <drc_shared/generic_module.hpp>
-#include "trajectory_generator.h"
+#include "trajectory_generator_thread.h"
 
-class trajectory_generator_module: public generic_module<trajectory_generator>
+class trajectory_generator_module: public generic_module<trajectory_generator_thread>
 {
 public:
     trajectory_generator_module(int argc, char* argv[], std::string module_prefix, int module_period, yarp::os::ResourceFinder rf)
-    :generic_module< trajectory_generator >(argc,argv,module_prefix,module_period,rf)
+    :generic_module< trajectory_generator_thread >(argc,argv,module_prefix,module_period,rf)
     {}
     
     

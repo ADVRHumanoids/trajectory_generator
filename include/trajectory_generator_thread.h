@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.*/
 
-#ifndef TRJ_GEN_H
-#define TRJ_GEN_H
+#ifndef TRJ_GEN_TH_H
+#define TRJ_GEN_TH_H
 
 
 #include <yarp/os/all.h>
@@ -21,11 +21,12 @@
 #include <drc_shared/yarp_command_interface.hpp>
 #include <drc_shared/yarp_msgs/trj_generator_msg.h>
 #include <drc_shared/generic_thread.hpp>
+#include <trajectory_generator/trajectory_generator.h>
 
-class trajectory_generator: public generic_thread
+class trajectory_generator_thread: public generic_thread
 {
 public:
-    trajectory_generator(std::string module_prefix, yarp::os::ResourceFinder rf,std::shared_ptr<paramHelp::ParamHelperServer> ph);
+    trajectory_generator_thread(std::string module_prefix, yarp::os::ResourceFinder rf,std::shared_ptr<paramHelp::ParamHelperServer> ph);
     
 private:
     yarp::os::Network* yarp;
@@ -34,7 +35,7 @@ private:
     walkman::drc::yarp_custom_command_interface<trj_generator_input_msg> command_input_interface; //TODO provvisorio, si farà una rpc
     walkman::drc::yarp_custom_command_sender_interface<trj_generator_output_msg> command_output_interface; //TODO provvisorio, si farà una rpc,  
 												      //questa deve essere una sender ma serve lo yarp network!!
-    
+    trajectory_generator trj_generator;
     trj_generator_input_msg in_msg;
     trj_generator_output_msg out_msg;
     walkman::drc::yarp_status_interface status_interface;
@@ -50,4 +51,4 @@ public:
     virtual bool custom_resume();
 };
 
-#endif //TRJ_GEN_H
+#endif //TRJ_GEN_TH_H
