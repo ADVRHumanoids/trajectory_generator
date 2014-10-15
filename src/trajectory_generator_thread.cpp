@@ -15,7 +15,7 @@
 #include "trajectory_generator_thread.h"
 
 trajectory_generator_thread::trajectory_generator_thread(std::string module_prefix, yarp::os::ResourceFinder rf,std::shared_ptr<paramHelp::ParamHelperServer> ph)
-: generic_thread(module_prefix,rf,ph),command_input_interface(module_prefix),command_output_interface(module_prefix+"_out"),status_interface(module_prefix)
+: generic_thread(module_prefix,rf,ph),rpc_server(module_prefix),status_interface(module_prefix)
 {
 
 }
@@ -62,7 +62,7 @@ void trajectory_generator_thread::run()
 {
     int seq_num;
         
-    if(command_input_interface.getCommand(in_msg,seq_num))
+    if(rpc_server.getCommand(in_msg,seq_num))
     {
         std::string command = in_msg.command;
 
@@ -71,12 +71,12 @@ void trajectory_generator_thread::run()
 	if(command=="line")
 	{
 	    compute_line_trj(in_msg,out_msg);
-	    command_output_interface.sendCommand(out_msg,seq_num);
+	    rpc_server.reply(out_msg,seq_num);
 	}
 	if(command=="circle")
 	{
 	    compute_circle_trj(in_msg,out_msg);
-	    command_output_interface.sendCommand(out_msg,seq_num);   
+	    rpc_server.reply(out_msg,seq_num);   
 	}
     }
 }

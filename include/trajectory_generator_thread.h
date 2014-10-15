@@ -18,7 +18,7 @@
 
 #include <yarp/os/all.h>
 #include <drc_shared/yarp_status_interface.h>
-#include <drc_shared/yarp_command_interface.hpp>
+#include <drc_shared/yarp_rpc_interface.hpp>
 #include <drc_shared/yarp_msgs/trj_generator_msg.h>
 #include <drc_shared/generic_thread.hpp>
 #include <trajectory_generator/trajectory_generator.h>
@@ -31,10 +31,9 @@ public:
 private:
     yarp::os::Network* yarp;
     double period;
-
-    walkman::drc::yarp_custom_command_interface<trj_generator_input_msg> command_input_interface; //TODO provvisorio, si farà una rpc
-    walkman::drc::yarp_custom_command_sender_interface<trj_generator_output_msg> command_output_interface; //TODO provvisorio, si farà una rpc,  
-												      //questa deve essere una sender ma serve lo yarp network!!
+ 
+    walkman::drc::yarp_custom_rpc_server_interface<trj_generator_input_msg,trj_generator_output_msg> rpc_server;
+    
     trajectory_generator trj_generator;
     trj_generator_input_msg in_msg;
     trj_generator_output_msg out_msg;
