@@ -58,7 +58,10 @@ add_executable(trajectory_generator
        ${HEADER_FILES}
        )
 
-add_library(trajectory_generator_lib SHARED src/trajectory_generator.cpp)
+add_library(trajectory_generator_lib SHARED src/trajectory_generator.cpp include/trajectory_generator/trajectory_generator.h)
+
+set_target_properties(trajectory_generator_lib PROPERTIES PUBLIC_HEADER "include/trajectory_generator/trajectory_generator.h")
+
 target_link_libraries(trajectory_generator_lib ${kdl_codyco_LIBRARIES})
 
 #install for superbuild
@@ -66,18 +69,18 @@ target_include_directories(trajectory_generator_lib PUBLIC "$<BUILD_INTERFACE:${
 			  "$<INSTALL_INTERFACE:${${VARS_PREFIX}_INSTALL_INCLUDEDIR}>")
 			  
 install(TARGETS trajectory_generator_lib
-    EXPORT trajectory_generator_Lib #note that you need to change at least one character
+    EXPORT trajectory_generator #note that you need to change at least one character
     ARCHIVE DESTINATION "${${VARS_PREFIX}_INSTALL_BINDIR}" COMPONENT lib
     RUNTIME DESTINATION "${${VARS_PREFIX}_INSTALL_BINDIR}" COMPONENT bin
     LIBRARY DESTINATION "${${VARS_PREFIX}_INSTALL_LIBDIR}" COMPONENT shlib
-    PUBLIC_HEADER DESTINATION "${${VARS_PREFIX}_INSTALL_INCLUDEDIR}/trajectory_generator_lib" COMPONENT dev
+    PUBLIC_HEADER DESTINATION "${${VARS_PREFIX}_INSTALL_INCLUDEDIR}/trajectory_generator" COMPONENT dev
     )
     
 set_property(GLOBAL APPEND PROPERTY ${VARS_PREFIX}_TARGETS trajectory_generator_lib)
 
 include(InstallBasicPackageFiles)
 
-install_basic_package_files(trajectory_generator_Lib VARS_PREFIX ${VARS_PREFIX}
+install_basic_package_files(trajectory_generator VARS_PREFIX ${VARS_PREFIX}
                                        VERSION "1.0.0"
                                        TARGETS_PROPERTY ${VARS_PREFIX}_TARGETS
                                        COMPATIBILITY SameMajorVersion
