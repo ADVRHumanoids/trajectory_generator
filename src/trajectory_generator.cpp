@@ -211,3 +211,106 @@ void trajectory_generator::circle_trajectory(std::map<double,KDL::Frame>& trj)
     }    
     //std::cout<<')'<<std::endl;
 }
+
+
+
+// ************************************************************************************
+// 				BEZIER CURVE METHODS
+// ************************************************************************************
+
+void trajectory_generator::set_bezier_time(double t)
+{
+    bezier_param.time = t;
+}
+
+void trajectory_generator::set_bezier_start(KDL::Frame start)
+{
+    bezier_param.start = start;
+}
+
+void trajectory_generator::set_bezier_end(KDL::Frame end)
+{
+    bezier_param.end = end;
+}
+
+void trajectory_generator::bezier_trajectory(std::map<double,KDL::Frame>& trj)
+{
+    trj.clear();
+  
+    KDL::Frame temp_frame;
+    KDL::Vector temp_vector_p, start_vector_p, end_vector_p;
+    KDL::Vector temp_vector_r, start_vector_r, end_vector_r;
+
+    start_vector_p.data[0] = bezier_param.start.p.x();
+    start_vector_p.data[1] = bezier_param.start.p.y();
+    start_vector_p.data[2] = bezier_param.start.p.z();
+    double ro,pi,ya;
+    bezier_param.start.M.GetRPY(ro,pi,ya);
+    start_vector_r.data[0] = ro;
+    start_vector_r.data[1] = pi;
+    start_vector_r.data[2] = ya;
+    
+    end_vector_p.data[0] = bezier_param.end.p.x();
+    end_vector_p.data[1] = bezier_param.end.p.y();
+    end_vector_p.data[2] = bezier_param.end.p.z();
+    double ro_,pi_,ya_;
+    bezier_param.end.M.GetRPY(ro_,pi_,ya_);
+    end_vector_r.data[0] = ro_;
+    end_vector_r.data[1] = pi_;
+    end_vector_r.data[2] = ya_;
+    bezier_param.bz_fun = new bezier_curve(&n,bezier_param.start.p,bezier_param.end.p);
+    // re-implementation of the run method    
+    while (trajInCollision())
+    {
+	std::cout<<"!!! Bezier curve in collision !!!"<<std::endl; 	  
+	while(computeNeighborsCOM()) // verify obstacle type in the collision neighborhood and return obstacle type
+	{	
+	    avoidObstacle();
+	}
+    }
+    std::cout<<"Found Bezier curve not in collision"<<std::endl;
+    
+    // Use minimum jerk polynomials for rotation
+    for(double t=0;t<=bezier_param.time;t=t+0.01)
+    {
+	temp_vector_p = bezier_param.bz_fun->curve->at(t);
+    
+	temp_vector_r = 20.0*end_vector_r/(2.0*pow(line_param.time,3))*pow(t,3) + (-30.0*end_vector_r)/(2.0*pow(line_param.time,4))*pow(t,4) + (12.0*end_vector_r)/(2.0*pow(line_param.time,5))*pow(t,5);
+    
+	temp_frame.p.x(temp_vector_p.data[0]);
+	temp_frame.p.y(temp_vector_p.data[1]);
+	temp_frame.p.z(temp_vector_p.data[2]);
+	temp_frame.M = KDL::Rotation::RPY(temp_vector_r.data[0],temp_vector_r.data[1],temp_vector_r.data[2]);
+    
+	trj[t] = temp_frame;
+    }
+        
+}
+
+bool trajectory_generator::trajInCollision()
+{
+    computeBezierCurve();
+    return bezier_param.bz_fun->inCollisionOctomap();
+}
+
+bool trajectory_generator::computeNeighborsCOM()
+{
+    return bezier_param.bz_fun->computeNeighborsCOM();
+}
+
+void trajectory_generator::avoidObstacle()
+{
+    bezier_param.bz_fun->avoidObstacle(); // move the control points based on obstacle type
+}
+
+void trajectory_generator::computeBezierCurve()
+{
+    std::cout<<"Computing new Bezier curve..."<<std::endl;
+    bezier_param.bz_fun->curve->clear();
+    for(double t=0;t<=bezier_param.time;t=t+0.01)
+    {
+	bezier_param.bz_fun->computeBezier(bezier_param.bz_fun->ctrl_points,bezier_param.bz_fun->curve,t);
+	bezier_param.bz_fun->curve->push_back(bezier_param.bz_fun->q);
+    }
+    
+}

@@ -17,8 +17,10 @@
 
 #include <string>
 #include <map>
-#include <boost/concept_check.hpp>
 #include <kdl/frames.hpp>
+
+#include <geometry_msgs/Point.h>
+#include "bezier_curve.h"
     
 class line_parameters
 {
@@ -62,14 +64,38 @@ public:
     double center_angle;
     double radius;  
 };
+
+class bezier_parameters
+{
+public:
+    
+    bezier_parameters()
+    {
+	time=1;
+	start.p = KDL::Vector::Zero();
+	start.M = KDL::Rotation::Identity();
+	end.p = KDL::Vector::Zero();
+	end.M = KDL::Rotation::Identity();
+    }
+    
+    double time;
+    KDL::Frame start;
+    KDL::Frame end; 
+    bezier_curve* bz_fun;
+
+};
     
 class trajectory_generator
 {
 public:
+  
+    ros::NodeHandle n;
+    
     trajectory_generator();
     
     void line_trajectory(std::map<double,KDL::Frame>& trj);
     void circle_trajectory(std::map<double,KDL::Frame>& trj);
+    void bezier_trajectory(std::map<double,KDL::Frame>& trj);
     
     void set_line_time(double t);
     void set_line_start(KDL::Frame start);
@@ -82,10 +108,20 @@ public:
     void set_circle_hand_ee(bool hand);
     void set_circle_center_angle(double angle);
     void set_circle_radius(double radius);
+    
+    void set_bezier_time(double t);
+    void set_bezier_start(KDL::Frame start);
+    void set_bezier_end(KDL::Frame end);
+    bool trajInCollision();
+    bool computeNeighborsCOM();
+    void computeBezierCurve();
+    void avoidObstacle();
+
   
 private:
     line_parameters line_param;
     circle_parameters circle_param;    
+    bezier_parameters bezier_param;
 };    
     
 #endif //TRJ_GEN_H

@@ -14,10 +14,12 @@ include(YCMDefaultDirs)
 ycm_default_dirs(${VARS_PREFIX})
 #end superbuild stuff
 
+
 if(COMMAND cmake_policy)
     cmake_policy(SET CMP0003 OLD)
     cmake_policy(SET CMP0005 NEW)
 endif(COMMAND cmake_policy)
+include(ExternalProject)
 include(CheckCXXCompilerFlag)
 check_cxx_compiler_flag("-std=c++11" COMPILER_SUPPORTS_CXX11)
 check_cxx_compiler_flag("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
@@ -33,6 +35,11 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Mo
 
 ## System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS system)
+find_package(roscpp REQUIRED)
+find_package(octomap REQUIRED)
+find_package(message_generation REQUIRED)
+find_package(catkin REQUIRED COMPONENTS roscpp octomap octomap_ros octomap_msgs)
+## System dependencies are found with CMake's conventions
 find_package(YARP REQUIRED)
 find_package(ICUB REQUIRED)
 find_package(Eigen3 REQUIRED)
@@ -41,10 +48,16 @@ find_package(kdl_codyco REQUIRED)
 find_package(TinyXML REQUIRED)
 find_package(paramHelp REQUIRED)
 find_package(iDynTree REQUIRED)
-               
-###########
-## Build ##
-###########
+
+# set(ROS_LIB_FOLDER $ENV{ROS_LIB_FOLDER} CACHE STRING "ros lib folder")
+
+catkin_package(
+  INCLUDE_DIRS include
+  CATKIN_DEPENDS roscpp rospy roslib 
+  DEPENDS system_lib
+)
+
+
 add_subdirectory(app)
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
@@ -55,6 +68,7 @@ FILE(GLOB_RECURSE HEADER_FILES include/*.h)
 add_executable(trajectory_generator
        src/trajectory_generator_thread.cpp
        src/main.cpp
+       src/bezier_curve.cpp
        ${HEADER_FILES}
        )
 
@@ -62,7 +76,7 @@ add_library(trajectory_generator_lib SHARED src/trajectory_generator.cpp include
 
 set_target_properties(trajectory_generator_lib PROPERTIES PUBLIC_HEADER "include/trajectory_generator/trajectory_generator.h")
 
-target_link_libraries(trajectory_generator_lib ${kdl_codyco_LIBRARIES})
+target_link_libraries(trajectory_generator_lib ${kdl_codyco_LIBRARIES} ${catkin_LIBRARIES})
 
 #install for superbuild
 target_include_directories(trajectory_generator_lib PUBLIC "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>"
@@ -102,6 +116,8 @@ target_link_libraries(trajectory_generator
         ${paramHelp_LIBRARIES}
         ${drc_shared_LIBRARIES}
         ${iDynTree_LIBRARIES}
+        ${Octomap_LIBRARIES}
+        ${catkin_LIBRARIES}
         )
    
 #############
