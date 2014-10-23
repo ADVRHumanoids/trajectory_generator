@@ -63,7 +63,7 @@ add_subdirectory(app)
 ## Your package locations should be listed before other locations
 include_directories(include ${YARP_INCLUDE_DIRS}  ${iDynTree_INCLUDE_DIRS} ${ICUB_INCLUDE_DIRS} ${Eigen_INCLUDE_DIRS} ${drc_shared_INCLUDE_DIRS} ${paramHelp_INCLUDE_DIRS})
 
-FILE(GLOB_RECURSE HEADER_FILES include/*.h)
+FILE(GLOB_RECURSE HEADER_FILES include/trajectory_generator/*.h)
 
 add_executable(trajectory_generator
        src/trajectory_generator_thread.cpp
@@ -72,9 +72,9 @@ add_executable(trajectory_generator
        ${HEADER_FILES}
        )
 
-add_library(trajectory_generator_lib SHARED src/trajectory_generator.cpp include/trajectory_generator/trajectory_generator.h)
+add_library(trajectory_generator_lib SHARED src/trajectory_generator.cpp ${HEADER_FILES})
 
-set_target_properties(trajectory_generator_lib PROPERTIES PUBLIC_HEADER "include/trajectory_generator/trajectory_generator.h")
+set_target_properties(trajectory_generator_lib PROPERTIES PUBLIC_HEADER "${HEADER_FILES}")
 
 target_link_libraries(trajectory_generator_lib ${kdl_codyco_LIBRARIES} ${catkin_LIBRARIES})
 
