@@ -72,9 +72,9 @@ add_executable(trajectory_generator
        ${HEADER_FILES}
        )
 
-add_library(trajectory_generator_lib SHARED src/trajectory_generator.cpp src/bezier_curve.cpp ${HEADER_FILES})
+add_library(trajectory_generator_lib SHARED src/trajectory_generator.cpp src/bezier_curve.cpp)
 
-set_target_properties(trajectory_generator_lib PROPERTIES PUBLIC_HEADER "${HEADER_FILES}")
+set_target_properties(trajectory_generator_lib PROPERTIES PUBLIC_HEADER ${HEADER_FILES})
 
 target_link_libraries(trajectory_generator_lib ${kdl_codyco_LIBRARIES} ${catkin_LIBRARIES})
 
