@@ -258,15 +258,14 @@ void trajectory_generator::bezier_trajectory(std::map<double,KDL::Frame>& trj)
     end_vector_r.data[0] = ro_;
     end_vector_r.data[1] = pi_;
     end_vector_r.data[2] = ya_;
+    
     bezier_param.bz_fun = new bezier_curve(&n,bezier_param.start.p,bezier_param.end.p);
     // re-implementation of the run method    
     while (trajInCollision())
     {
 	std::cout<<"!!! Bezier curve in collision !!!"<<std::endl; 	  
-	while(computeNeighborsCOM()) // verify obstacle type in the collision neighborhood and return obstacle type
-	{	
-	    avoidObstacle();
-	}
+	computeNeighborsCOM(); // verify obstacle type in the collision neighborhood and return obstacle type	
+	avoidObstacle();
     }
     std::cout<<"Found Bezier curve not in collision"<<std::endl;
     
@@ -293,9 +292,9 @@ bool trajectory_generator::trajInCollision()
     return bezier_param.bz_fun->inCollisionOctomap();
 }
 
-bool trajectory_generator::computeNeighborsCOM()
+void trajectory_generator::computeNeighborsCOM()
 {
-    return bezier_param.bz_fun->computeNeighborsCOM();
+    bezier_param.bz_fun->computeNeighborsCOM();
 }
 
 void trajectory_generator::avoidObstacle()

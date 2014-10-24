@@ -17,6 +17,11 @@
 #include "../include/trajectory_generator/bezier_curve.h"
 #include <boost/iterator/iterator_concepts.hpp>
 
+//TODO 	Make the obstacle avoidance algorithm generic: 
+//TODO	given a goal vector P=(p_x,p_y,p_z), the invariant dimension will be
+//TODO 	the one with maximum magnitude, i.e. if P=(3,2,1), the invariant dimension
+//TODO 	will be x and the control points act on y and z (as it is now)
+
 bezier_curve::bezier_curve(ros::NodeHandle* n, KDL::Vector p_start, KDL::Vector p_end)
 { 
     octomap_sub = n->subscribe("octomap_binary", 1000, &bezier_curve::octomapCallback, this);
@@ -76,19 +81,22 @@ bool bezier_curve::inCollisionOctomap()
     // NO PROBLEM WITH TF: BOTH CURVE AND OCTOMAP ARE IN WORLD FRAME
     for (int i=0;i<curve->size();i++)
     { 
-	KDL::Vector pc = curve->at(i);  
+	KDL::Vector pc = curve->at(i);	// get a point of the curve  
 	
-// 	geometry_msgs::PoseStamped world_point;
-// 	world_point.pose.orientation.w=1;world_point.pose.orientation.x=0;world_point.pose.orientation.y=0;world_point.pose.orientation.z=0;
-// 	world_point.pose.position.x=pc.x();
-// 	world_point.pose.position.y=pc.y();
-// 	world_point.pose.position.z=pc.z();
-// 	world_point.header.frame_id="world";
-// 	
-// 	std::string frame="camera_link"; 	
-// 	geometry_msgs::PoseStamped camera_point;
-// 	
-// 	tf.transformPose(frame,world_point,camera_point);
+	// Transform from world to camera_link
+	std::string target_frame="camera_link";    
+	geometry_msgs::PoseStamped world_point;
+	world_point.pose.orientation.w=1;world_point.pose.orientation.x=0;world_point.pose.orientation.y=0;world_point.pose.orientation.z=0;
+	world_point.pose.position.x=pc.x();
+	world_point.pose.position.y=pc.y();
+	world_point.pose.position.z=pc.z(),
+	world_point.header.frame_id="base_link";
+	geometry_msgs::PoseStamped camera_point;
+	tf.transformPose(target_frame,world_point,camera_point);
+	pc.x(camera_point.pose.position.x);
+	pc.y(camera_point.pose.position.y);
+	pc.z(camera_point.pose.position.z);
+	
 	if(octree != NULL)
 	{
 	    for(octomap::OcTree::leaf_iterator it = octree->begin_leafs(); it!= octree->end_leafs(); ++it)
@@ -113,7 +121,7 @@ bool bezier_curve::inCollisionOctomap()
     return result;
 }
 
-bool bezier_curve::computeNeighborsCOM()
+void bezier_curve::computeNeighborsCOM()
 {
     octomap::OcTreeKey key = octree->coordToKey(obstacle_collision); // get key
     std::cout<<"Key of the voxel: "<<key[0]<<" "<<key[1]<<" "<<key[2]<<std::endl;		
@@ -125,43 +133,77 @@ bool bezier_curve::computeNeighborsCOM()
     octomap::point3d pn;
     
     // Compute the 6 neighbors of the selected voxel
-    for (int i=0;i < 3;i++)
+//     for (int i=0;i < 3;i++)
+//     {
+// 	neighborkey[i] +=1;
+// 	std::cout<<"Key of the voxel neighbor: "<<neighborkey[i]<<std::endl;
+// 	pn = octree->keyToCoord(neighborkey);
+// 	neighbor_node = octree->search(pn);
+// 			
+// 	if (neighbor_node != NULL)
+// 	{
+// 	    if(octree->isNodeOccupied(neighbor_node))
+// 	    {
+// 		neighbor_vector_pos.push_back(pn);
+// 		std::cout<<"Neighbor point: "<<pn.x()<<" "<<pn.y()<<" "<<pn.z()<<" ["<<neighbor_node->getOccupancy()<<"]"<<std::endl;
+// 	    }
+// 	    else
+// 		std::cout<<"Neighbor not occupied ["<<neighbor_node->getOccupancy()<<"]"<<std::endl;
+// 	}
+// 	else
+// 	    std::cout<<"Neighbor does not exists"<<std::endl;
+// 	
+// 	neighborkey[i] -=2;
+// 	std::cout<<"Key of the voxel neighbor: "<<neighborkey[i]<<std::endl;
+// 	pn = octree->keyToCoord(neighborkey);
+// 	neighbor_node = octree->search(pn);
+// 	
+// 	if (neighbor_node != NULL)
+// 	{
+// 	    if(octree->isNodeOccupied(neighbor_node))
+// 	    {
+// 		neighbor_vector_pos.push_back(pn);
+// 		std::cout<<"Neighbor point: "<<pn.x()<<" "<<pn.y()<<" "<<pn.z()<<" ["<<neighbor_node->getOccupancy()<<"]"<<std::endl;
+// 	    }
+// 	    else
+// 		std::cout<<"Neighbor not occupied ["<<neighbor_node->getOccupancy()<<"]"<<std::endl;
+// 	}
+// 	else
+// 	    std::cout<<"Neighbor does not exists"<<std::endl; 
+//     }
+    
+    // Compute 26 neighbors
+    for (int n = 1; n < 4 ; n++)
     {
-	neighborkey[i] +=1;
-	std::cout<<"Key of the voxel neighbor: "<<neighborkey[i]<<std::endl;
-	pn = octree->keyToCoord(neighborkey);
-	neighbor_node = octree->search(pn);
-			
-	if (neighbor_node != NULL)
+      std::cout<<"Expanding to the level:"<<n<<std::endl;
+      for (neighborkey[2] = key[2] - n; neighborkey[2] <= key[2] + n; ++neighborkey[2])
+      {
+	for (neighborkey[1] = key[1] - n; neighborkey[1] <= key[1] + n; ++neighborkey[1])
 	{
-	    if(octree->isNodeOccupied(neighbor_node))
+	  for (neighborkey[0] = key[0] - n; neighborkey[0] <= key[0] + n; ++neighborkey[0])
+	  {
+// 		  std::cout<<"Key of the voxel neighbor: "<<neighborkey[0]<<" "<<neighborkey[1]<<" "<<neighborkey[2]<<std::endl;
+	    if (neighborkey != key)	
 	    {
-		neighbor_vector_pos.push_back(pn);
-		std::cout<<"Neighbor point: "<<pn.x()<<" "<<pn.y()<<" "<<pn.z()<<" ["<<neighbor_node->getOccupancy()<<"]"<<std::endl;
+	      pn = octree->keyToCoord(neighborkey);
+	      neighbor_node = octree->search(pn);
+	      if (neighbor_node != NULL)
+	      {
+		if(octree->isNodeOccupied(neighbor_node))
+		{
+		  neighbor_vector_pos.push_back(pn);
+// 			std::cout<<"Neighbor point: "<<pn.x()<<" "<<pn.y()<<" "<<pn.z()<<" ["<<neighbor_node->getOccupancy()<<"]"<<std::endl;
+// 		  count++;
+		}
+// 		      else
+// 			std::cout<<"Neighbor not occupied ["<<neighbor_node->getOccupancy()<<"]"<<std::endl;
+	      }
+	      else
+		std::cout<<"Neighbor does not exists"<<std::endl;
 	    }
-	    else
-		std::cout<<"Neighbor not occupied ["<<neighbor_node->getOccupancy()<<"]"<<std::endl;
+	  }
 	}
-	else
-	    std::cout<<"Neighbor does not exists"<<std::endl;
-	
-	neighborkey[i] -=2;
-	std::cout<<"Key of the voxel neighbor: "<<neighborkey[i]<<std::endl;
-	pn = octree->keyToCoord(neighborkey);
-	neighbor_node = octree->search(pn);
-	
-	if (neighbor_node != NULL)
-	{
-	    if(octree->isNodeOccupied(neighbor_node))
-	    {
-		neighbor_vector_pos.push_back(pn);
-		std::cout<<"Neighbor point: "<<pn.x()<<" "<<pn.y()<<" "<<pn.z()<<" ["<<neighbor_node->getOccupancy()<<"]"<<std::endl;
-	    }
-	    else
-		std::cout<<"Neighbor not occupied ["<<neighbor_node->getOccupancy()<<"]"<<std::endl;
-	}
-	else
-	    std::cout<<"Neighbor does not exists"<<std::endl; 
+      }
     }
     
     for (int i=0;i<neighbor_vector_pos.size();i++)	
@@ -172,22 +214,40 @@ bool bezier_curve::computeNeighborsCOM()
     
     neighborsCOM /= neighbor_vector_pos.size();
     
-    return true;
+}
+
+void bezier_curve::avoidObstacle() //TODO Now works with x invariant, TO BE GENERALIZED
+{
+    // Transform curve collision and neighborsCOM from camera_link to world
+    std::string target_frame="base_link";    
+    geometry_msgs::PoseStamped collision_camera, neighborsCOM_camera;
     
-}
-
-bool bezier_curve::CheckNeighbors(KDL::Vector curvePoint) // TODO from Ale, compute the com of the neighborhood of the node in collision
-{
-    return true;
+    collision_camera.pose.orientation.w=1;collision_camera.pose.orientation.x=0;collision_camera.pose.orientation.y=0;collision_camera.pose.orientation.z=0;
+    collision_camera.pose.position.x=curve_collision.x();
+    collision_camera.pose.position.y=curve_collision.y();
+    collision_camera.pose.position.z=curve_collision.z();
+    collision_camera.header.frame_id="camera_link";
+    geometry_msgs::PoseStamped collision_world;
+    tf.transformPose(target_frame,collision_camera,collision_world);
+    curve_collision.x(collision_world.pose.position.x);
+    curve_collision.y(collision_world.pose.position.y);
+    curve_collision.z(collision_world.pose.position.z);
   
-}
-
-void bezier_curve::avoidObstacle()
-{
+    neighborsCOM_camera.pose.orientation.w=1;neighborsCOM_camera.pose.orientation.x=0;neighborsCOM_camera.pose.orientation.y=0;neighborsCOM_camera.pose.orientation.z=0;
+    neighborsCOM_camera.pose.position.x=neighborsCOM.x();
+    neighborsCOM_camera.pose.position.y=neighborsCOM.y();
+    neighborsCOM_camera.pose.position.z=neighborsCOM.z();
+    neighborsCOM_camera.header.frame_id="camera_link";
+    geometry_msgs::PoseStamped neighborsCOM_world;
+    tf.transformPose(target_frame,neighborsCOM_camera,neighborsCOM_world);
+    neighborsCOM.x()=neighborsCOM_world.pose.position.x;
+    neighborsCOM.y()=neighborsCOM_world.pose.position.y;
+    neighborsCOM.z()=neighborsCOM_world.pose.position.z;
+    
     if (neighborsCOM.y() < curve_collision.y())	
-	obst_left = true;
+	obst_right = true;
     else
-	obst_left = false;
+	obst_right = false;
     if (neighborsCOM.z() < curve_collision.z())
 	obst_down = true;
     else
@@ -225,10 +285,10 @@ void bezier_curve::avoidObstacle()
 	  ctrl_p2.z(ctrl_p2.z()+ w*(curve_collision.z() - pm.z()));
       }
   }
-  // Check y-axis //TODO Verify that obst_down corresponds to obst_left in the y-axis test
+  // Check y-axis //TODO Verify that obst_down corresponds to obst_right in the y-axis test
   if (curve_collision.y() > pm.y())
   {
-      if (obst_left)
+      if (obst_right)
       {
 	  ctrl_p1.y(ctrl_p1.y()+ w*(curve_collision.y() - pm.y()));
 	  ctrl_p2.y(ctrl_p2.y()+ w*(curve_collision.y() - pm.y()));
@@ -241,7 +301,7 @@ void bezier_curve::avoidObstacle()
   }
   else
   {
-      if (obst_left)
+      if (obst_right)
       {
 	  ctrl_p1.y(ctrl_p1.y()+ w*(pm.y() -curve_collision.y())); 
 	  ctrl_p2.y(ctrl_p2.y()+ w*(pm.y() -curve_collision.y()));

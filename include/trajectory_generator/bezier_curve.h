@@ -43,7 +43,7 @@ public:
   void octomapCallback(const octomap_msgs::Octomap& octomap_msg);
   bool inCollisionOctomap();
   void avoidObstacle();
-  bool computeNeighborsCOM();//KDL::Vector neighbor, KDL::Vector neighborCOM);
+  void computeNeighborsCOM();//KDL::Vector neighbor, KDL::Vector neighborCOM);
   KDL::Vector q; 
   KDL::Vector pm, ctrl_p1, ctrl_p2;
   KDL::Vector start, end;
@@ -53,7 +53,7 @@ public:
   std::vector<KDL::Vector>* curve;	
   std::vector<KDL::Vector>* ctrl_points;		
   bool obst_down;
-  bool obst_left;
+  bool obst_right;
   
 private:
   float b;
@@ -67,8 +67,6 @@ private:
   octomap::AbstractOcTree* tree;
   octomap::OcTree* octree;
   
-
-  bool CheckNeighbors(KDL::Vector curvePoint);
   
 };
 

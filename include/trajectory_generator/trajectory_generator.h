@@ -113,7 +113,7 @@ public:
     void set_bezier_start(KDL::Frame start);
     void set_bezier_end(KDL::Frame end);
     bool trajInCollision();
-    bool computeNeighborsCOM();
+    void computeNeighborsCOM();
     void computeBezierCurve();
     void avoidObstacle();
 
