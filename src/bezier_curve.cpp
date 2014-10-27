@@ -92,6 +92,14 @@ bool bezier_curve::inCollisionOctomap()
 	world_point.pose.position.z=pc.z(),
 	world_point.header.frame_id="base_link";
 	geometry_msgs::PoseStamped camera_point;
+	
+	std::string err_msg;
+	if(!(tf.waitForTransform(target_frame,world_point.header.frame_id,ros::Time::now(), ros::Duration(1.0), ros::Duration(0.01), &err_msg)))
+	{
+	    ROS_ERROR("Error in tf: %s",err_msg.c_str());
+	    return true;
+	}
+	
 	tf.transformPose(target_frame,world_point,camera_point);
 	pc.x(camera_point.pose.position.x);
 	pc.y(camera_point.pose.position.y);
@@ -228,6 +236,14 @@ void bezier_curve::avoidObstacle() //TODO Now works with x invariant, TO BE GENE
     collision_camera.pose.position.z=curve_collision.z();
     collision_camera.header.frame_id="camera_link";
     geometry_msgs::PoseStamped collision_world;
+    
+    std::string err_msg;
+    if(!(tf.waitForTransform(target_frame,collision_camera.header.frame_id,ros::Time::now(), ros::Duration(1.0), ros::Duration(0.01), &err_msg)))
+    {
+	ROS_ERROR("Error in tf: %s",err_msg.c_str());
+	return;
+    }
+  
     tf.transformPose(target_frame,collision_camera,collision_world);
     curve_collision.x(collision_world.pose.position.x);
     curve_collision.y(collision_world.pose.position.y);
@@ -239,6 +255,13 @@ void bezier_curve::avoidObstacle() //TODO Now works with x invariant, TO BE GENE
     neighborsCOM_camera.pose.position.z=neighborsCOM.z();
     neighborsCOM_camera.header.frame_id="camera_link";
     geometry_msgs::PoseStamped neighborsCOM_world;
+    
+    if(!(tf.waitForTransform(target_frame,neighborsCOM_camera.header.frame_id,ros::Time::now(), ros::Duration(1.0), ros::Duration(0.01), &err_msg)))
+    {
+	ROS_ERROR("Error in tf: %s",err_msg.c_str());
+	return;
+    }
+    
     tf.transformPose(target_frame,neighborsCOM_camera,neighborsCOM_world);
     neighborsCOM.x()=neighborsCOM_world.pose.position.x;
     neighborsCOM.y()=neighborsCOM_world.pose.position.y;
