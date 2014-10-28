@@ -240,6 +240,8 @@ double trajectory_generator::valve_turn_trajectory(double t, KDL::Rotation& ROTv
 	pos_d.p = valve_circle_param.start.p + ROTv*Xd_v_p;
 
     }
+    
+    pos_d.M = KDL::Rotation::RotZ(CircleAngle);
 
     return CircleAngle;
 }
