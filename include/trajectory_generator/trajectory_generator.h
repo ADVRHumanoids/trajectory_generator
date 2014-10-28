@@ -21,69 +21,7 @@
 
 #include <geometry_msgs/Point.h>
 #include "bezier_curve.h"
-    
-class line_parameters
-{
-public:
-    line_parameters()
-    {
-	time=1;
-	start.p = KDL::Vector::Zero();
-	start.M = KDL::Rotation::Identity();
-	displacement.p = KDL::Vector::Zero();
-	displacement.M = KDL::Rotation::Identity();
-    }
-    
-    double time;
-    KDL::Frame start;
-    KDL::Frame displacement;  
-};
-
-class circle_parameters
-{
-public:
-    circle_parameters()
-    {
-	time=1;
-	start.p = KDL::Vector::Zero();
-	start.M = KDL::Rotation::Identity();
-	displacement.p = KDL::Vector::Zero();
-	displacement.M = KDL::Rotation::Identity();
-	left=1;
-	hand=1;
-	center_angle = 0;
-	radius=0;
-    }
-  
-    double time;
-    KDL::Frame start;
-    KDL::Frame displacement;
-    
-    bool left;
-    bool hand;
-    double center_angle;
-    double radius;  
-};
-
-class bezier_parameters
-{
-public:
-    
-    bezier_parameters()
-    {
-	time=1;
-	start.p = KDL::Vector::Zero();
-	start.M = KDL::Rotation::Identity();
-	end.p = KDL::Vector::Zero();
-	end.M = KDL::Rotation::Identity();
-    }
-    
-    double time;
-    KDL::Frame start;
-    KDL::Frame end; 
-    bezier_curve* bz_fun;
-
-};
+#include "curves_types.h"
     
 class trajectory_generator
 {
