@@ -58,10 +58,24 @@ public:
     
     ros::NodeHandle n;
     
+    // VALVE TRAJECTORIES
+    
+    bool valve_line_trajectory(double t, KDL::Frame& pos_d, KDL::Frame& vel_d );
+    bool valve_line_initialize(double time, KDL::Frame& start, KDL::Frame& displacement);
+    
+    double valve_circle_trajectory(double t, bool left_arm, KDL::Rotation& ROTe, KDL::Frame& pos_d, KDL::Frame& vel_d);
+    bool valve_circle_initialize(double time, double radius, double center_angle, KDL::Frame& start);
+    
+    double valve_turn_trajectory(double t, KDL::Rotation& ROTv, KDL::Frame& pos_d, KDL::Frame& vel_d);
+    bool valve_turn_initialize(double time, double radius, double center_angle, KDL::Frame& start);
+    
 private:
     line_parameters line_param;
     circle_parameters circle_param;    
     bezier_parameters bezier_param;
+    valve_line_parameters valve_line_param;
+    valve_circle_parameters valve_circle_param;
+    valve_turn_parameters valve_turn_param;
 };    
     
 #endif //TRJ_GEN_H

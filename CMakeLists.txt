@@ -72,7 +72,7 @@ add_executable(trajectory_generator
        ${HEADER_FILES}
        )
 
-add_library(trajectory_generator_lib SHARED src/trajectory_generator.cpp src/bezier_curve.cpp)
+add_library(trajectory_generator_lib SHARED src/trajectory_generator.cpp src/valve_trajectory_generator.cpp src/bezier_curve.cpp)
 
 set_target_properties(trajectory_generator_lib PROPERTIES PUBLIC_HEADER "${HEADER_FILES}")
 
