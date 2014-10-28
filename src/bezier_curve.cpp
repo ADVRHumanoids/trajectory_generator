@@ -22,6 +22,7 @@
 
 bezier_curve::bezier_curve(ros::NodeHandle* n, KDL::Vector p_start, KDL::Vector p_end)
 { 
+    octree = NULL;
     octomap_sub = n->subscribe("octomap_binary", 1000, &bezier_curve::octomapCallback, this);
     
     curve = new std::vector<KDL::Vector>;
@@ -31,6 +32,9 @@ bezier_curve::bezier_curve(ros::NodeHandle* n, KDL::Vector p_start, KDL::Vector 
     
     start = p_start;
     end = p_end;
+    
+    std::cout<<"p_start: "<<p_start.x()<<" "<<p_start.y()<<" "<<p_start.z()<<std::endl;
+    std::cout<<"p_end: "<<p_end.x()<<" "<<p_end.y()<<" "<<p_end.z()<<std::endl;
     
     pm.x((start.x() + end.x())/2);
     pm.y((start.y() + end.y())/2);
@@ -43,17 +47,17 @@ bezier_curve::bezier_curve(ros::NodeHandle* n, KDL::Vector p_start, KDL::Vector 
     ctrl_points->push_back(end);
 }
 
-void bezier_curve::computeBezier( std::vector<KDL::Vector>* cp, std::vector<KDL::Vector>* curve, double t)
+void bezier_curve::computeBezier(double t)
 {
     q.x(0.0);
     q.y(0.0);
     q.z(0.0);
-    for (int j = 0; j < cp->size(); j++)
+    for (int j = 0; j < ctrl_points->size(); j++)
     {
-	KDL::Vector p = cp->at(j);
-	q.x(q.x()+ p.x() * Bernstein(cp->size()-1,j,t));
-	q.y(q.y()+ p.y() * Bernstein(cp->size()-1,j,t));
-	q.z(q.z()+ p.z() * Bernstein(cp->size()-1,j,t));
+	KDL::Vector p = ctrl_points->at(j);
+	q.x(q.x()+ p.x() * Bernstein(ctrl_points->size()-1,j,t));
+	q.y(q.y()+ p.y() * Bernstein(ctrl_points->size()-1,j,t));
+	q.z(q.z()+ p.z() * Bernstein(ctrl_points->size()-1,j,t));
     }	
 }
 
@@ -80,7 +84,7 @@ bool bezier_curve::inCollisionOctomap()
     for (int i=0;i<curve->size();i++)
     { 
 	KDL::Vector pc = curve->at(i);	// get a point of the curve  
-	
+
 	// Transform from world to camera_link
 	std::string target_frame="camera_link";    
 	geometry_msgs::PoseStamped world_point;
@@ -91,14 +95,21 @@ bool bezier_curve::inCollisionOctomap()
 	world_point.header.frame_id="base_link";
 	geometry_msgs::PoseStamped camera_point;
 	
-	std::string err_msg;
-	if(!(tf.waitForTransform(target_frame,world_point.header.frame_id,ros::Time::now(), ros::Duration(1.0), ros::Duration(0.01), &err_msg)))
-	{
-	    ROS_ERROR("Error in tf: %s",err_msg.c_str());
-	    return true;
-	}
+	try {
+	    listener.waitForTransform(target_frame, "base_link", ros::Time(0), ros::Duration(10.0) );
+	    listener.transformPose(target_frame,world_point,camera_point);
+	    } catch (tf::TransformException ex) {
+		ROS_ERROR("%s",ex.what());
+	      }
+// 	std::string err_msg;
+// 
+// 	if(!(listener.waitForTransform(target_frame,world_point.header.frame_id,ros::Time::now(), ros::Duration(10.0), ros::Duration(0.01), &err_msg)))
+// 	{
+// 	    ROS_ERROR("Error in tf: %s",err_msg.c_str());
+// 	    return true;
+// 	}
 	
-	tf.transformPose(target_frame,world_point,camera_point);
+// 	listener.transformPose(target_frame,world_point,camera_point);
 	pc.x(camera_point.pose.position.x);
 	pc.y(camera_point.pose.position.y);
 	pc.z(camera_point.pose.position.z);
@@ -235,14 +246,20 @@ void bezier_curve::avoidObstacle() //TODO Now works with x invariant, TO BE GENE
     collision_camera.header.frame_id="camera_link";
     geometry_msgs::PoseStamped collision_world;
     
-    std::string err_msg;
-    if(!(tf.waitForTransform(target_frame,collision_camera.header.frame_id,ros::Time::now(), ros::Duration(1.0), ros::Duration(0.01), &err_msg)))
-    {
-	ROS_ERROR("Error in tf: %s",err_msg.c_str());
-	return;
-    }
+//     std::string err_msg;
+//     if(!(listener.waitForTransform(target_frame,collision_camera.header.frame_id,ros::Time::now(), ros::Duration(10.0), ros::Duration(0.01), &err_msg)))
+//     {
+// 	ROS_ERROR("Error in tf: %s",err_msg.c_str());
+// 	return;
+//     }
+    try {
+	listener.waitForTransform(target_frame, "camera_link", ros::Time(0), ros::Duration(10.0) );
+	listener.transformPose(target_frame,collision_camera,collision_world);
+	} catch (tf::TransformException ex) {
+	    ROS_ERROR("%s",ex.what());
+	  }
   
-    tf.transformPose(target_frame,collision_camera,collision_world);
+//     listener.transformPose(target_frame,collision_camera,collision_world);
     curve_collision.x(collision_world.pose.position.x);
     curve_collision.y(collision_world.pose.position.y);
     curve_collision.z(collision_world.pose.position.z);
@@ -254,13 +271,20 @@ void bezier_curve::avoidObstacle() //TODO Now works with x invariant, TO BE GENE
     neighborsCOM_camera.header.frame_id="camera_link";
     geometry_msgs::PoseStamped neighborsCOM_world;
     
-    if(!(tf.waitForTransform(target_frame,neighborsCOM_camera.header.frame_id,ros::Time::now(), ros::Duration(1.0), ros::Duration(0.01), &err_msg)))
-    {
-	ROS_ERROR("Error in tf: %s",err_msg.c_str());
-	return;
-    }
+//     if(!(listener.waitForTransform(target_frame,neighborsCOM_camera.header.frame_id,ros::Time::now(), ros::Duration(10.0), ros::Duration(0.01), &err_msg)))
+//     {
+// 	ROS_ERROR("Error in tf: %s",err_msg.c_str());
+// 	return;
+//     }
     
-    tf.transformPose(target_frame,neighborsCOM_camera,neighborsCOM_world);
+    try {
+	listener.waitForTransform(target_frame, "camera_link", ros::Time(0), ros::Duration(10.0) );
+	listener.transformPose(target_frame,neighborsCOM_camera,neighborsCOM_world);
+	} catch (tf::TransformException ex) {
+	    ROS_ERROR("%s",ex.what());
+	  }
+	  
+//     listener.transformPose(target_frame,neighborsCOM_camera,neighborsCOM_world);
     neighborsCOM.x()=neighborsCOM_world.pose.position.x;
     neighborsCOM.y()=neighborsCOM_world.pose.position.y;
     neighborsCOM.z()=neighborsCOM_world.pose.position.z;

@@ -13,6 +13,7 @@
  * limitations under the License.*/
 
 #include <trajectory_generator/trajectory_generator.h>
+#include <../../opt/ros/indigo/include/ros/builtin_message_traits.h>
 
 trajectory_generator::trajectory_generator()
 {
@@ -274,27 +275,41 @@ void trajectory_generator::bezier_trajectory(std::map<double,KDL::Frame>& trj)
     
     bezier_param.bz_fun = new bezier_curve(&n,bezier_param.start.p,bezier_param.end.p);
     // re-implementation of the run method    
-    while (trajInCollision())
-    {
-	std::cout<<"!!! Bezier curve in collision !!!"<<std::endl; 	  
-	computeNeighborsCOM(); // verify obstacle type in the collision neighborhood and return obstacle type	
-	avoidObstacle();
-    }
-    std::cout<<"Found Bezier curve not in collision"<<std::endl;
-    
-    // Use minimum jerk polynomials for rotation
-    for(double t=0;t<=bezier_param.time;t=t+0.01)
-    {
-	temp_vector_p = bezier_param.bz_fun->curve->at(t);
-    
+    while (1) {
+      if (bezier_param.bz_fun->octree != NULL){
+	while (trajInCollision())
+	{
+	    std::cout<<"!!! Bezier curve in collision !!!"<<std::endl; 	  
+	    computeNeighborsCOM(); // verify obstacle type in the collision neighborhood and return obstacle type	
+	    avoidObstacle();
+	}
+	std::cout<<"Found Bezier curve not in collision"<<std::endl;
+	
+	int i=0;
+	// Use minimum jerk polynomials for rotation
+	for(double t=0;t<=bezier_param.time;t=t+0.01)
+	{
+	    temp_vector_p = bezier_param.bz_fun->curve->at(i);
+	
 	temp_vector_r = polynomial_interpolation(poly,end_vector_r,t,bezier_param.time);
+	
+	    temp_frame.p.x(temp_vector_p.data[0]);
+	    temp_frame.p.y(temp_vector_p.data[1]);
+	    temp_frame.p.z(temp_vector_p.data[2]);
+	    temp_frame.M = KDL::Rotation::RPY(temp_vector_r.data[0],temp_vector_r.data[1],temp_vector_r.data[2]);
+	
+	    trj[t] = temp_frame;
+	    
+	    std::cout<<"Computed trajectory: "<<trj[t].p.x()<<" "<<trj[t].p.y()<<" "<<trj[t].p.z()<<std::endl;
+	    i++;
+	}
+	break;
+      }
+    else	
+	 std::cout<<"No Octomap found"<<std::endl;
     
-	temp_frame.p.x(temp_vector_p.data[0]);
-	temp_frame.p.y(temp_vector_p.data[1]);
-	temp_frame.p.z(temp_vector_p.data[2]);
-	temp_frame.M = KDL::Rotation::RPY(temp_vector_r.data[0],temp_vector_r.data[1],temp_vector_r.data[2]);
-    
-	trj[t] = temp_frame;
+    ros::spinOnce();
+    sleep(1);
     }
         
 }
@@ -321,8 +336,9 @@ void trajectory_generator::computeBezierCurve()
     bezier_param.bz_fun->curve->clear();
     for(double t=0;t<=bezier_param.time;t=t+0.01)
     {
-	bezier_param.bz_fun->computeBezier(bezier_param.bz_fun->ctrl_points,bezier_param.bz_fun->curve,t);
+	bezier_param.bz_fun->computeBezier(t);
 	bezier_param.bz_fun->curve->push_back(bezier_param.bz_fun->q);
+// 	KDL::Vector p =bezier_param.bz_fun->curve->at(t);
     }
     
 }

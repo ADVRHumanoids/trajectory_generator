@@ -37,7 +37,7 @@ class bezier_curve
 public:
   bezier_curve(ros::NodeHandle* n, KDL::Vector p_start, KDL::Vector p_end);
 
-  void computeBezier( std::vector<KDL::Vector>* cp, std::vector<KDL::Vector>* curve, double t);
+  void computeBezier(double t);
   void octomapCallback(const octomap_msgs::Octomap& octomap_msg);
   bool inCollisionOctomap();
   void avoidObstacle();
@@ -52,6 +52,7 @@ public:
   std::vector<KDL::Vector>* ctrl_points;		
   bool obst_down;
   bool obst_right;
+  octomap::OcTree* octree;
   
 private:
   float b;
@@ -60,10 +61,9 @@ private:
   int factorial (int x);
   int binomialCoeff (int a, int b);
   
-  tf::TransformListener tf;
+  tf::TransformListener listener;
   ros::Subscriber octomap_sub;
   octomap::AbstractOcTree* tree;
-  octomap::OcTree* octree;
   
   
 };

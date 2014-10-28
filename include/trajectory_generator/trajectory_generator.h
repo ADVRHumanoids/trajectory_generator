@@ -22,6 +22,7 @@
 #include <geometry_msgs/Point.h>
 #include "bezier_curve.h"
 #include "curves_types.h"
+#include <ros/ros.h>
     
 class trajectory_generator
 {
