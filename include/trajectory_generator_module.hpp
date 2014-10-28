@@ -1,4 +1,4 @@
-/* Copyright [2014] [Alessandro Settimi, Mirko Ferrati, Arash Ajoudani, Jinoh Lee]
+/* Copyright [2014] [Corrado Pavan, Alessandro Settimi, Mirko Ferrati, Arash Ajoudani, Jinoh Lee]
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.

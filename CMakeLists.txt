@@ -1,4 +1,4 @@
-# Copyright: (C)  Alessandro Settimi, Mirko Ferrati, Arash Ajoudani, Jinoh Lee
+# Copyright: (C)  Corrado Pavan, Alessandro Settimi, Mirko Ferrati, Arash Ajoudani, Jinoh Lee
 # Authors: Alessandro Settimi, Mirko Ferrati
 # CopyPolicy: Released under the terms of the GNU GPL v3.0.
 
