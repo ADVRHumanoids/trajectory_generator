@@ -26,20 +26,20 @@
 class trajectory_generator
 {
 public:
-  
-    ros::NodeHandle n;
     
     trajectory_generator();
     
-    void line_trajectory(std::map<double,KDL::Frame>& trj);
-    void circle_trajectory(std::map<double,KDL::Frame>& trj);
-    void bezier_trajectory(std::map<double,KDL::Frame>& trj);
+    KDL::Vector polynomial_interpolation(polynomial_coefficients& poly, KDL::Vector& vec_f, double time, double t_f);
+    double polynomial_interpolation(polynomial_coefficients& poly, double value_f, double time, double t_f);
+    // GENERIC TRAJECTORIES
     
-    void set_line_time(double t);
+    void line_trajectory(std::map<double,KDL::Frame>& trj);
+    void set_line_time(double time);
     void set_line_start(KDL::Frame start);
     void set_line_displacement(KDL::Frame displacement);
     
-    void set_circle_time(double t);
+    void circle_trajectory(std::map<double,KDL::Frame>& trj);
+    void set_circle_time(double time);
     void set_circle_start(KDL::Frame start);
     void set_circle_displacement(KDL::Frame displacement);
     void set_circle_left_ee(bool left);
@@ -47,15 +47,17 @@ public:
     void set_circle_center_angle(double angle);
     void set_circle_radius(double radius);
     
-    void set_bezier_time(double t);
+    void bezier_trajectory(std::map<double,KDL::Frame>& trj);
+    void set_bezier_time(double time);
     void set_bezier_start(KDL::Frame start);
     void set_bezier_end(KDL::Frame end);
     bool trajInCollision();
     void computeNeighborsCOM();
     void computeBezierCurve();
     void avoidObstacle();
-
-  
+    
+    ros::NodeHandle n;
+    
 private:
     line_parameters line_param;
     circle_parameters circle_param;    

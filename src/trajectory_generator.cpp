@@ -19,9 +19,19 @@ trajectory_generator::trajectory_generator()
 
 }
 
-void trajectory_generator::set_line_time(double t)
+KDL::Vector trajectory_generator::polynomial_interpolation(polynomial_coefficients& poly, KDL::Vector& vec_f, double time, double t_f)
 {
-    line_param.time = t;
+    return poly.a()*vec_f/(2.0*pow(t_f,3))*pow(time,3) + (poly.b()*vec_f)/(2.0*pow(t_f,4))*pow(time,4) + (poly.c()*vec_f)/(2.0*pow(t_f,5))*pow(time,5);
+}
+
+double trajectory_generator::polynomial_interpolation(polynomial_coefficients& poly, double value_f, double time, double t_f)
+{
+    return poly.a()*value_f/(2.0*pow(t_f,3))*pow(time,3) + (poly.b()*value_f)/(2.0*pow(t_f,4))*pow(time,4) + (poly.c()*value_f)/(2.0*pow(t_f,5))*pow(time,5);
+}
+
+void trajectory_generator::set_line_time(double time)
+{
+    line_param.time = time;
 }
 
 void trajectory_generator::set_line_start(KDL::Frame start)
@@ -37,6 +47,8 @@ void trajectory_generator::set_line_displacement(KDL::Frame displacement)
 void trajectory_generator::line_trajectory(std::map<double,KDL::Frame>& trj)
 {
     trj.clear();
+    
+    polynomial_coefficients poly;
   
     KDL::Frame temp_frame;
     KDL::Vector temp_vector_p, start_vector_p, dis_vector_p;
@@ -68,15 +80,13 @@ void trajectory_generator::line_trajectory(std::map<double,KDL::Frame>& trj)
     
     for(double t=0;t<=line_param.time;t=t+0.01)
     {
-          //         Xd = Xinit          + 20.0*Xf          /(2.0*Tf*Tf*Tf)*t*t*t          + (-30.0*Xf)          /(2.0*Tf*Tf*Tf*Tf)*t*t*t*t     + (12.0*Xf)          /(2.0*Tf*Tf*Tf*Tf*Tf)*t*t*t*t*t;
-	  temp_vector_p = start_vector_p + 20.0*dis_vector_p/(2.0*pow(line_param.time,3))*pow(t,3) + (-30.0*dis_vector_p)/(2.0*pow(line_param.time,4))*pow(t,4) + (12.0*dis_vector_p)/(2.0*pow(line_param.time,5))*pow(t,5);
-	  temp_vector_r = start_vector_r + 20.0*dis_vector_r/(2.0*pow(line_param.time,3))*pow(t,3) + (-30.0*dis_vector_r)/(2.0*pow(line_param.time,4))*pow(t,4) + (12.0*dis_vector_r)/(2.0*pow(line_param.time,5))*pow(t,5);
+	  temp_vector_p = start_vector_p + polynomial_interpolation(poly,dis_vector_p,t,line_param.time);
+	  temp_vector_r = start_vector_r + polynomial_interpolation(poly,dis_vector_r,t,line_param.time);
 	  
 	  temp_frame.p.x(temp_vector_p.data[0]);
 	  temp_frame.p.y(temp_vector_p.data[1]);
 	  temp_frame.p.z(temp_vector_p.data[2]);
 	  temp_frame.M = KDL::Rotation::RPY(temp_vector_r.data[0],temp_vector_r.data[1],temp_vector_r.data[2]);
-	  
 	  
 	  trj[t] = temp_frame;
 // 	  std::cout<<t<<' '<<temp_vector_p.data[0]<<' '<<temp_vector_p.data[1]<<' '<<temp_vector_p.data[2]<<' '<<temp_vector_r.data[0]<<' '<<temp_vector_r.data[1]<<' '<<temp_vector_r.data[2]<<' ';
@@ -116,15 +126,17 @@ void trajectory_generator::set_circle_radius(double radius)
     circle_param.radius = radius;
 }
 
-void trajectory_generator::set_circle_time(double t)
+void trajectory_generator::set_circle_time(double time)
 {
-    circle_param.time = t;
+    circle_param.time = time;
 }
 
 void trajectory_generator::circle_trajectory(std::map<double,KDL::Frame>& trj)
 {
     trj.clear();
   
+    polynomial_coefficients poly;
+    
     KDL::Frame temp_frame;
     KDL::Vector temp_vector_p, start_vector_p, dis_vector_p;
     KDL::Vector temp_vector_r, start_vector_r, dis_vector_r;
@@ -169,13 +181,12 @@ void trajectory_generator::circle_trajectory(std::map<double,KDL::Frame>& trj)
     
     for(double t=0;t<=circle_param.time;t=t+0.01)
     {
-        //CircleAngle = 20.0*Xf1/(2.0*Tf*Tf*Tf)*t*t*t                   + (-30.0*Xf1)/(2.0*Tf*Tf*Tf*Tf)*t*t*t*t              + (12.0*Xf1)/(2.0*Tf*Tf*Tf*Tf*Tf)*t*t*t*t*t;
-	circle_angle =  20.0*Xf1/(2.0*pow(circle_param.time,3))*pow(t,3) + (-30.0*Xf1)/(2.0*pow(circle_param.time,4))*pow(t,4) + (12.0*Xf1)/(2.0*pow(circle_param.time,5))*pow(t,5);
+	circle_angle = polynomial_interpolation(poly,Xf1,t,circle_param.time);
 	circle_angle = circle_angle - atan2(dis_vector_p.data[index_2],dis_vector_p.data[0]);
 
-	temp_vector_p.data[index_1] = start_vector_p.data[index_1] + 20.0*(dis_vector_p.data[index_1])/(2.0*pow(circle_param.time,3))*pow(t,3) + (-30.0*dis_vector_p.data[index_1])/(2.0*pow(circle_param.time,4))*pow(t,4) + (12.0*dis_vector_p.data[index_1])/(2.0*pow(circle_param.time,5))*pow(t,5);
+	temp_vector_p.data[index_1] = start_vector_p.data[index_1] + polynomial_interpolation(poly,dis_vector_p.data[index_1],t,circle_param.time);
 	
-	temp_vector_r = start_vector_r + 20.0*dis_vector_r/(2.0*pow(circle_param.time,3))*pow(t,3) + (-30.0*dis_vector_r)/(2.0*pow(circle_param.time,4))*pow(t,4) + (12.0*dis_vector_r)/(2.0*pow(circle_param.time,5))*pow(t,5);
+	temp_vector_r = start_vector_r + polynomial_interpolation(poly,dis_vector_r,t,circle_param.time);
 	
         if(!circle_param.left) //RIGHT
 	{
@@ -218,9 +229,9 @@ void trajectory_generator::circle_trajectory(std::map<double,KDL::Frame>& trj)
 // 				BEZIER CURVE METHODS
 // ************************************************************************************
 
-void trajectory_generator::set_bezier_time(double t)
+void trajectory_generator::set_bezier_time(double time)
 {
-    bezier_param.time = t;
+    bezier_param.time = time;
 }
 
 void trajectory_generator::set_bezier_start(KDL::Frame start)
@@ -237,6 +248,8 @@ void trajectory_generator::bezier_trajectory(std::map<double,KDL::Frame>& trj)
 {
     trj.clear();
   
+    polynomial_coefficients poly;
+    
     KDL::Frame temp_frame;
     KDL::Vector temp_vector_p, start_vector_p, end_vector_p;
     KDL::Vector temp_vector_r, start_vector_r, end_vector_r;
@@ -274,7 +287,7 @@ void trajectory_generator::bezier_trajectory(std::map<double,KDL::Frame>& trj)
     {
 	temp_vector_p = bezier_param.bz_fun->curve->at(t);
     
-	temp_vector_r = 20.0*end_vector_r/(2.0*pow(line_param.time,3))*pow(t,3) + (-30.0*end_vector_r)/(2.0*pow(line_param.time,4))*pow(t,4) + (12.0*end_vector_r)/(2.0*pow(line_param.time,5))*pow(t,5);
+	temp_vector_r = polynomial_interpolation(poly,end_vector_r,t,bezier_param.time);
     
 	temp_frame.p.x(temp_vector_p.data[0]);
 	temp_frame.p.y(temp_vector_p.data[1]);
