@@ -36,7 +36,7 @@ class bezier_curve
 {
 public:
   bezier_curve(ros::NodeHandle* n, KDL::Vector p_start, KDL::Vector p_end);
-
+  
   void computeBezier(double t);
   void octomapCallback(const octomap_msgs::Octomap& octomap_msg);
   bool inCollisionOctomap();

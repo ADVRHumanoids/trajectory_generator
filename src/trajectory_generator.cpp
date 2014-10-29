@@ -338,7 +338,6 @@ void trajectory_generator::computeBezierCurve()
     {
 	bezier_param.bz_fun->computeBezier(t);
 	bezier_param.bz_fun->curve->push_back(bezier_param.bz_fun->q);
-// 	KDL::Vector p =bezier_param.bz_fun->curve->at(t);
     }
     
 }

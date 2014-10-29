@@ -77,10 +77,8 @@ float bezier_curve::Bernstein(int n, int j, float t)
 
 bool bezier_curve::inCollisionOctomap()	
 {
-//     ComputeBezier(cp,n_points,curve);
     bool result = false;
     
-    // NO PROBLEM WITH TF: BOTH CURVE AND OCTOMAP ARE IN WORLD FRAME
     for (int i=0;i<curve->size();i++)
     { 
 	KDL::Vector pc = curve->at(i);	// get a point of the curve  
@@ -101,15 +99,7 @@ bool bezier_curve::inCollisionOctomap()
 	    } catch (tf::TransformException ex) {
 		ROS_ERROR("%s",ex.what());
 	      }
-// 	std::string err_msg;
-// 
-// 	if(!(listener.waitForTransform(target_frame,world_point.header.frame_id,ros::Time::now(), ros::Duration(10.0), ros::Duration(0.01), &err_msg)))
-// 	{
-// 	    ROS_ERROR("Error in tf: %s",err_msg.c_str());
-// 	    return true;
-// 	}
-	
-// 	listener.transformPose(target_frame,world_point,camera_point);
+
 	pc.x(camera_point.pose.position.x);
 	pc.y(camera_point.pose.position.y);
 	pc.z(camera_point.pose.position.z);
@@ -149,46 +139,6 @@ void bezier_curve::computeNeighborsCOM()
     octomap::OcTreeNode* neighbor_node;
     octomap::point3d pn;
     
-    // Compute the 6 neighbors of the selected voxel
-//     for (int i=0;i < 3;i++)
-//     {
-// 	neighborkey[i] +=1;
-// 	std::cout<<"Key of the voxel neighbor: "<<neighborkey[i]<<std::endl;
-// 	pn = octree->keyToCoord(neighborkey);
-// 	neighbor_node = octree->search(pn);
-// 			
-// 	if (neighbor_node != NULL)
-// 	{
-// 	    if(octree->isNodeOccupied(neighbor_node))
-// 	    {
-// 		neighbor_vector_pos.push_back(pn);
-// 		std::cout<<"Neighbor point: "<<pn.x()<<" "<<pn.y()<<" "<<pn.z()<<" ["<<neighbor_node->getOccupancy()<<"]"<<std::endl;
-// 	    }
-// 	    else
-// 		std::cout<<"Neighbor not occupied ["<<neighbor_node->getOccupancy()<<"]"<<std::endl;
-// 	}
-// 	else
-// 	    std::cout<<"Neighbor does not exists"<<std::endl;
-// 	
-// 	neighborkey[i] -=2;
-// 	std::cout<<"Key of the voxel neighbor: "<<neighborkey[i]<<std::endl;
-// 	pn = octree->keyToCoord(neighborkey);
-// 	neighbor_node = octree->search(pn);
-// 	
-// 	if (neighbor_node != NULL)
-// 	{
-// 	    if(octree->isNodeOccupied(neighbor_node))
-// 	    {
-// 		neighbor_vector_pos.push_back(pn);
-// 		std::cout<<"Neighbor point: "<<pn.x()<<" "<<pn.y()<<" "<<pn.z()<<" ["<<neighbor_node->getOccupancy()<<"]"<<std::endl;
-// 	    }
-// 	    else
-// 		std::cout<<"Neighbor not occupied ["<<neighbor_node->getOccupancy()<<"]"<<std::endl;
-// 	}
-// 	else
-// 	    std::cout<<"Neighbor does not exists"<<std::endl; 
-//     }
-    
     // Compute 26 neighbors
     for (int n = 1; n < 4 ; n++)
     {
@@ -199,7 +149,6 @@ void bezier_curve::computeNeighborsCOM()
 	{
 	  for (neighborkey[0] = key[0] - n; neighborkey[0] <= key[0] + n; ++neighborkey[0])
 	  {
-// 		  std::cout<<"Key of the voxel neighbor: "<<neighborkey[0]<<" "<<neighborkey[1]<<" "<<neighborkey[2]<<std::endl;
 	    if (neighborkey != key)	
 	    {
 	      pn = octree->keyToCoord(neighborkey);
@@ -209,11 +158,7 @@ void bezier_curve::computeNeighborsCOM()
 		if(octree->isNodeOccupied(neighbor_node))
 		{
 		  neighbor_vector_pos.push_back(pn);
-// 			std::cout<<"Neighbor point: "<<pn.x()<<" "<<pn.y()<<" "<<pn.z()<<" ["<<neighbor_node->getOccupancy()<<"]"<<std::endl;
-// 		  count++;
 		}
-// 		      else
-// 			std::cout<<"Neighbor not occupied ["<<neighbor_node->getOccupancy()<<"]"<<std::endl;
 	      }
 	      else
 		std::cout<<"Neighbor does not exists"<<std::endl;
@@ -246,20 +191,13 @@ void bezier_curve::avoidObstacle() //TODO Now works with x invariant, TO BE GENE
     collision_camera.header.frame_id="camera_link";
     geometry_msgs::PoseStamped collision_world;
     
-//     std::string err_msg;
-//     if(!(listener.waitForTransform(target_frame,collision_camera.header.frame_id,ros::Time::now(), ros::Duration(10.0), ros::Duration(0.01), &err_msg)))
-//     {
-// 	ROS_ERROR("Error in tf: %s",err_msg.c_str());
-// 	return;
-//     }
     try {
 	listener.waitForTransform(target_frame, "camera_link", ros::Time(0), ros::Duration(10.0) );
 	listener.transformPose(target_frame,collision_camera,collision_world);
 	} catch (tf::TransformException ex) {
 	    ROS_ERROR("%s",ex.what());
 	  }
-  
-//     listener.transformPose(target_frame,collision_camera,collision_world);
+
     curve_collision.x(collision_world.pose.position.x);
     curve_collision.y(collision_world.pose.position.y);
     curve_collision.z(collision_world.pose.position.z);
@@ -271,12 +209,6 @@ void bezier_curve::avoidObstacle() //TODO Now works with x invariant, TO BE GENE
     neighborsCOM_camera.header.frame_id="camera_link";
     geometry_msgs::PoseStamped neighborsCOM_world;
     
-//     if(!(listener.waitForTransform(target_frame,neighborsCOM_camera.header.frame_id,ros::Time::now(), ros::Duration(10.0), ros::Duration(0.01), &err_msg)))
-//     {
-// 	ROS_ERROR("Error in tf: %s",err_msg.c_str());
-// 	return;
-//     }
-    
     try {
 	listener.waitForTransform(target_frame, "camera_link", ros::Time(0), ros::Duration(10.0) );
 	listener.transformPose(target_frame,neighborsCOM_camera,neighborsCOM_world);
@@ -284,11 +216,13 @@ void bezier_curve::avoidObstacle() //TODO Now works with x invariant, TO BE GENE
 	    ROS_ERROR("%s",ex.what());
 	  }
 	  
-//     listener.transformPose(target_frame,neighborsCOM_camera,neighborsCOM_world);
     neighborsCOM.x()=neighborsCOM_world.pose.position.x;
     neighborsCOM.y()=neighborsCOM_world.pose.position.y;
     neighborsCOM.z()=neighborsCOM_world.pose.position.z;
     
+    // TODO CHECK THIS PART
+    
+    // Check the obstacle type
     if (neighborsCOM.y() < curve_collision.y())	
 	obst_right = true;
     else
@@ -297,74 +231,74 @@ void bezier_curve::avoidObstacle() //TODO Now works with x invariant, TO BE GENE
 	obst_down = true;
     else
 	obst_down = false;
-	    
-  // TODO modify the control points depending on the computed com 
-  if (curve_collision.x() <= pm.x())
-      ctrl_p1.x(ctrl_p1.x()+ w*(curve_collision.x() - pm.x()));
-  if (curve_collision.x() > pm.x())
-      ctrl_p2.x(ctrl_p2.x() + w*(curve_collision.x() - pm.x()));
-  // Check z-axis
-  if (curve_collision.z() > pm.z())
-  {
-      if (obst_down)
-      {
-	  ctrl_p1.z(ctrl_p1.z()+ w*(curve_collision.z() - pm.z()));
-	  ctrl_p2.z(ctrl_p2.z()+ w*(curve_collision.z() - pm.z()));
-      }
-      else
-      {
-	  ctrl_p1.z(ctrl_p1.z()+ w*(pm.z() -curve_collision.z())); 
-	  ctrl_p2.z(ctrl_p2.z()+ w*(pm.z() -curve_collision.z())); 
-      } 
-  }
-  else
-  {
-      if (obst_down)
-      {
-	  ctrl_p1.z(ctrl_p1.z()+ w*(pm.z() -curve_collision.z())); 
-	  ctrl_p2.z(ctrl_p2.z()+ w*(pm.z() -curve_collision.z()));
-      }
-      else
-      {
-	  ctrl_p1.z(ctrl_p1.z()+ w*(curve_collision.z() - pm.z()));
-	  ctrl_p2.z(ctrl_p2.z()+ w*(curve_collision.z() - pm.z()));
-      }
-  }
-  // Check y-axis //TODO Verify that obst_down corresponds to obst_right in the y-axis test
-  if (curve_collision.y() > pm.y())
-  {
-      if (obst_right)
-      {
-	  ctrl_p1.y(ctrl_p1.y()+ w*(curve_collision.y() - pm.y()));
-	  ctrl_p2.y(ctrl_p2.y()+ w*(curve_collision.y() - pm.y()));
-      }
-      else
-      {
-	  ctrl_p1.y(ctrl_p1.y()+ w*(pm.y() -curve_collision.y())); 
-	  ctrl_p2.y(ctrl_p2.y()+ w*(pm.y() -curve_collision.y())); 
-      } 
-  }
-  else
-  {
-      if (obst_right)
-      {
-	  ctrl_p1.y(ctrl_p1.y()+ w*(pm.y() -curve_collision.y())); 
-	  ctrl_p2.y(ctrl_p2.y()+ w*(pm.y() -curve_collision.y()));
-      }
-      else
-      {
-	  ctrl_p1.y(ctrl_p1.y()+ w*(curve_collision.y() - pm.y()));
-	  ctrl_p2.y(ctrl_p2.y()+ w*(curve_collision.y() - pm.y()));
-      }
-  }
-    
-  std::cout<<"Control point 1: "<<ctrl_p1.x()<<" "<<ctrl_p1.y()<<" "<<ctrl_p1.z()<<std::endl; 
-  std::cout<<"Control point 2: "<<ctrl_p2.x()<<" "<<ctrl_p2.y()<<" "<<ctrl_p2.z()<<std::endl; 
-  ctrl_points->clear();
-  ctrl_points->push_back(start);
-  ctrl_points->push_back(ctrl_p1);
-  ctrl_points->push_back(ctrl_p2);
-  ctrl_points->push_back(end);
+	   
+    // Avoid obstacle algorithm
+    if (curve_collision.x() <= pm.x())
+	ctrl_p1.x(ctrl_p1.x()+ w*(curve_collision.x() - pm.x()));
+    if (curve_collision.x() > pm.x())
+	ctrl_p2.x(ctrl_p2.x() + w*(curve_collision.x() - pm.x()));
+    // Check z-axis
+    if (curve_collision.z() > pm.z())
+    {
+	if (obst_down)
+	{
+	    ctrl_p1.z(ctrl_p1.z()+ w*(curve_collision.z() - pm.z()));
+	    ctrl_p2.z(ctrl_p2.z()+ w*(curve_collision.z() - pm.z()));
+	}
+	else
+	{
+	    ctrl_p1.z(ctrl_p1.z()+ w*(pm.z() -curve_collision.z())); 
+	    ctrl_p2.z(ctrl_p2.z()+ w*(pm.z() -curve_collision.z())); 
+	} 
+    }
+    else
+    {
+	if (obst_down)
+	{
+	    ctrl_p1.z(ctrl_p1.z()+ w*(pm.z() -curve_collision.z())); 
+	    ctrl_p2.z(ctrl_p2.z()+ w*(pm.z() -curve_collision.z()));
+	}
+	else
+	{
+	    ctrl_p1.z(ctrl_p1.z()+ w*(curve_collision.z() - pm.z()));
+	    ctrl_p2.z(ctrl_p2.z()+ w*(curve_collision.z() - pm.z()));
+	}
+    }
+    // Check y-axis //TODO Verify that obst_down corresponds to obst_right in the y-axis test
+    if (curve_collision.y() > pm.y())
+    {
+	if (obst_right)
+	{
+	    ctrl_p1.y(ctrl_p1.y()+ w*(curve_collision.y() - pm.y()));
+	    ctrl_p2.y(ctrl_p2.y()+ w*(curve_collision.y() - pm.y()));
+	}
+	else
+	{
+	    ctrl_p1.y(ctrl_p1.y()+ w*(pm.y() -curve_collision.y())); 
+	    ctrl_p2.y(ctrl_p2.y()+ w*(pm.y() -curve_collision.y())); 
+	} 
+    }
+    else
+    {
+	if (obst_right)
+	{
+	    ctrl_p1.y(ctrl_p1.y()+ w*(pm.y() -curve_collision.y())); 
+	    ctrl_p2.y(ctrl_p2.y()+ w*(pm.y() -curve_collision.y()));
+	}
+	else
+	{
+	    ctrl_p1.y(ctrl_p1.y()+ w*(curve_collision.y() - pm.y()));
+	    ctrl_p2.y(ctrl_p2.y()+ w*(curve_collision.y() - pm.y()));
+	}
+    }
+      
+    std::cout<<"Control point 1: "<<ctrl_p1.x()<<" "<<ctrl_p1.y()<<" "<<ctrl_p1.z()<<std::endl; 
+    std::cout<<"Control point 2: "<<ctrl_p2.x()<<" "<<ctrl_p2.y()<<" "<<ctrl_p2.z()<<std::endl; 
+    ctrl_points->clear();
+    ctrl_points->push_back(start);
+    ctrl_points->push_back(ctrl_p1);
+    ctrl_points->push_back(ctrl_p2);
+    ctrl_points->push_back(end);
 }
 
 void bezier_curve::octomapCallback(const octomap_msgs::Octomap& octomap_msg)
