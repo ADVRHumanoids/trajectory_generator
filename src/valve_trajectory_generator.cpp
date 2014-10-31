@@ -25,7 +25,7 @@ bool trajectory_generator::valve_line_initialize(double time, KDL::Frame& start,
     return true;
 }
 
-bool trajectory_generator::valve_line_trajectory(double t, KDL::Frame& pos_d, KDL::Frame& vel_d )
+bool trajectory_generator::valve_line_trajectory(double t, KDL::Frame& pos_d, KDL::Twist& vel_d )
 {
     if(!valve_line_param.initialized) return false;
   
@@ -68,18 +68,20 @@ bool trajectory_generator::valve_line_trajectory(double t, KDL::Frame& pos_d, KD
 	  pos_d.p.z(temp_vector_p.data[2]);
 	  pos_d.M = KDL::Rotation::RPY(temp_vector_r.data[0],temp_vector_r.data[1],temp_vector_r.data[2]);
 	  	  
-	  vel_d.p.x(temp_vel_vector_p.data[0]);
-	  vel_d.p.y(temp_vel_vector_p.data[1]);
-	  vel_d.p.z(temp_vel_vector_p.data[2]);
-	  vel_d.M = KDL::Rotation::RPY(temp_vel_vector_r.data[0],temp_vel_vector_r.data[1],temp_vel_vector_r.data[2]);
+	  vel_d.vel.x(temp_vel_vector_p.data[0]);
+	  vel_d.vel.y(temp_vel_vector_p.data[1]);
+	  vel_d.vel.z(temp_vel_vector_p.data[2]);
+	  vel_d.rot.x(temp_vel_vector_r.data[0]);
+	  vel_d.rot.y(temp_vel_vector_r.data[1]);
+	  vel_d.rot.z(temp_vel_vector_r.data[2]);
     }
     else if (t > valve_line_param.time)
     {
 	  pos_d.p = start_vector_p + dis_vector_p;
 	  pos_d.M = KDL::Rotation::RPY(start_vector_r.data[0] + dis_vector_r.data[0],start_vector_r.data[1] + dis_vector_r.data[1],start_vector_r.data[2] + dis_vector_r.data[2]);
 	  
-	  vel_d.p= KDL::Vector::Zero();
-	  vel_d.M = KDL::Rotation::Identity();
+	  vel_d.vel= KDL::Vector::Zero();
+	  vel_d.rot = KDL::Vector::Zero();
     }
     
     return true;

@@ -57,11 +57,9 @@ public:
     void computeBezierCurve();
     void avoidObstacle();
     
-    ros::NodeHandle n;
-    
     // VALVE TRAJECTORIES
     
-    bool valve_line_trajectory(double t, KDL::Frame& pos_d, KDL::Frame& vel_d );
+    bool valve_line_trajectory(double t, KDL::Frame& pos_d, KDL::Twist& vel_d );
     bool valve_line_initialize(double time, KDL::Frame& start, KDL::Frame& displacement);
     
     double valve_circle_trajectory(double t, bool left_arm, KDL::Rotation& ROTe, KDL::Frame& pos_d, KDL::Frame& vel_d);
