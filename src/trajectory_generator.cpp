@@ -20,12 +20,12 @@ trajectory_generator::trajectory_generator()
 
 }
 
-KDL::Vector trajectory_generator::polynomial_interpolation(polynomial_coefficients& poly, KDL::Vector& vec_f, double time, double t_f)
+KDL::Vector trajectory_generator::polynomial_interpolation(const polynomial_coefficients& poly,const KDL::Vector& vec_f, double time, double t_f)
 {
     return poly.a()*vec_f/(2.0*pow(t_f,3))*pow(time,3) + (poly.b()*vec_f)/(2.0*pow(t_f,4))*pow(time,4) + (poly.c()*vec_f)/(2.0*pow(t_f,5))*pow(time,5);
 }
 
-double trajectory_generator::polynomial_interpolation(polynomial_coefficients& poly, double value_f, double time, double t_f)
+double trajectory_generator::polynomial_interpolation(const polynomial_coefficients& poly, double value_f, double time, double t_f)
 {
     return poly.a()*value_f/(2.0*pow(t_f,3))*pow(time,3) + (poly.b()*value_f)/(2.0*pow(t_f,4))*pow(time,4) + (poly.c()*value_f)/(2.0*pow(t_f,5))*pow(time,5);
 }
@@ -40,7 +40,7 @@ void trajectory_generator::set_line_start(KDL::Frame start)
     line_param.start = start;
 }
 
-void trajectory_generator::set_line_displacement(KDL::Frame displacement)
+void trajectory_generator::set_line_displacement(const KDL::Frame& displacement)
 {
     line_param.displacement = displacement;
 }
@@ -102,7 +102,7 @@ void trajectory_generator::set_circle_center_angle(double angle)
     circle_param.center_angle = angle;
 }
 
-void trajectory_generator::set_circle_displacement(KDL::Frame displacement)
+void trajectory_generator::set_circle_displacement(const KDL::Frame& displacement)
 {
     circle_param.displacement = displacement;
 }

@@ -38,9 +38,9 @@ public:
 	c_=c;
     }
     
-    double a(){ return a_;}
-    double b(){ return b_;}
-    double c(){ return c_;}
+    double a() const{ return a_;}
+    double b() const{ return b_;}
+    double c() const{ return c_;}
     
 private:
     double a_,b_,c_;

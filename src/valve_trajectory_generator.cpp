@@ -14,7 +14,7 @@
 
 #include <trajectory_generator/trajectory_generator.h>
 
-bool trajectory_generator::valve_line_initialize(double time, KDL::Frame& start, KDL::Frame& displacement)
+bool trajectory_generator::valve_line_initialize(double time, const KDL::Frame& start, const KDL::Frame& displacement)
 {
     if(time<=0) return false;
     
@@ -87,7 +87,7 @@ bool trajectory_generator::valve_line_trajectory(double t, KDL::Frame& pos_d, KD
     return true;
 }
 
-bool trajectory_generator::valve_circle_initialize(double time, double radius, double center_angle, KDL::Frame& start)
+bool trajectory_generator::valve_circle_initialize(double time, double radius, double center_angle, const KDL::Frame& start)
 {
     if(time<=0) return false;
     
@@ -180,7 +180,7 @@ double trajectory_generator::valve_circle_trajectory(double t, bool left_arm, KD
     return CircleAngle;
 }
 
-bool trajectory_generator::valve_turn_initialize(double time, double radius, double center_angle, KDL::Frame& start)
+bool trajectory_generator::valve_turn_initialize(double time, double radius, double center_angle,const KDL::Frame& start)
 {
     if(time<=0) return false;
     
