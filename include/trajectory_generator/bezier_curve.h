@@ -32,10 +32,13 @@
 #include "geometry_msgs/PointStamped.h"
 #include "tf/transform_listener.h"
 
+namespace ros {
+class Node;}
+
 class bezier_curve
 {
 public:
-  bezier_curve(ros::NodeHandle* n, KDL::Vector p_start, KDL::Vector p_end);
+  bezier_curve(KDL::Vector p_start, KDL::Vector p_end);
   
   void computeBezier(double t);
   void octomapCallback(const octomap_msgs::Octomap& octomap_msg);
@@ -60,6 +63,7 @@ private:
   float Bernstein(int n, int j, float t);
   int factorial (int x);
   int binomialCoeff (int a, int b);
+  ros::NodeHandle n;
   
   tf::TransformListener listener;
   ros::Subscriber octomap_sub;

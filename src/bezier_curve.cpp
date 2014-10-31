@@ -20,10 +20,10 @@
 //TODO 	the one with maximum magnitude, i.e. if P=(3,2,1), the invariant dimension
 //TODO 	will be x and the control points act on y and z (as it is now)
 
-bezier_curve::bezier_curve(ros::NodeHandle* n, KDL::Vector p_start, KDL::Vector p_end)
+bezier_curve::bezier_curve(KDL::Vector p_start, KDL::Vector p_end)
 { 
     octree = NULL;
-    octomap_sub = n->subscribe("octomap_binary", 1000, &bezier_curve::octomapCallback, this);
+    octomap_sub = n.subscribe("octomap_binary", 1000, &bezier_curve::octomapCallback, this);
     
     curve = new std::vector<KDL::Vector>;
     curve->clear();

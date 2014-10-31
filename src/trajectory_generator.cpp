@@ -273,7 +273,7 @@ void trajectory_generator::bezier_trajectory(std::map<double,KDL::Frame>& trj)
     end_vector_r.data[1] = pi_;
     end_vector_r.data[2] = ya_;
     
-    bezier_param.bz_fun = new bezier_curve(&n,bezier_param.start.p,bezier_param.end.p);
+    bezier_param.bz_fun = new bezier_curve(bezier_param.start.p,bezier_param.end.p);
     // re-implementation of the run method    
     while (1) {
       if (bezier_param.bz_fun->octree != NULL){
