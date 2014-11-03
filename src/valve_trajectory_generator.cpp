@@ -14,13 +14,17 @@
 
 #include <trajectory_generator/trajectory_generator.h>
 
-bool trajectory_generator::valve_line_initialize(double time, const KDL::Frame& start, const KDL::Frame& displacement)
+bool trajectory_generator::valve_line_initialize(double time, const KDL::Frame& start, const KDL::Frame& final)
 {
     if(time<=0) return false;
     
     valve_line_param.time = time;
     valve_line_param.start = start;
-    valve_line_param.displacement = displacement;
+    valve_line_param.displacement.p = final.p-start.p;
+    double r,p,y,r1,p1,y1;
+    start.M.GetRPY(r,p,y);
+    final.M.GetRPY(r1,p1,y1);
+    valve_line_param.displacement.M=KDL::Rotation::RPY(r1-r,p1-p,y1-y);
     valve_line_param.initialized = true;
     return true;
 }

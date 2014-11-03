@@ -60,7 +60,7 @@ public:
     // VALVE TRAJECTORIES
     
     bool valve_line_trajectory(double t, KDL::Frame& pos_d, KDL::Twist& vel_d );
-    bool valve_line_initialize(double time, const KDL::Frame& start, const KDL::Frame& displacement);
+    bool valve_line_initialize(double time, const KDL::Frame& start, const KDL::Frame& final);
     
     double valve_circle_trajectory(double t, bool left_arm, KDL::Rotation& ROTe, KDL::Frame& pos_d, KDL::Frame& vel_d);
     bool valve_circle_initialize(double time, double radius, double center_angle, const KDL::Frame& start);
