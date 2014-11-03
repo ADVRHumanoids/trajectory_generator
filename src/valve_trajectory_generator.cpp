@@ -36,23 +36,16 @@ bool trajectory_generator::valve_line_trajectory(double t, KDL::Frame& pos_d, KD
     polynomial_coefficients poly,vel_poly;
     vel_poly.set_polynomial_coeff(60.0, -120.0, 60);
     
-    KDL::Vector temp_vector_p, start_vector_p, dis_vector_p;
     KDL::Vector temp_vector_r, start_vector_r, dis_vector_r;
     
     KDL::Vector temp_vel_vector_p, temp_vel_vector_r;
 
-    start_vector_p.data[0] = valve_line_param.start.p.x();
-    start_vector_p.data[1] = valve_line_param.start.p.y();
-    start_vector_p.data[2] = valve_line_param.start.p.z();
     double ro,pi,ya;
     valve_line_param.start.M.GetRPY(ro,pi,ya);
     start_vector_r.data[0] = ro;
     start_vector_r.data[1] = pi;
     start_vector_r.data[2] = ya;
     
-    dis_vector_p.data[0] = valve_line_param.displacement.p.x();
-    dis_vector_p.data[1] = valve_line_param.displacement.p.y();
-    dis_vector_p.data[2] = valve_line_param.displacement.p.z();
     double ro_,pi_,ya_;
     valve_line_param.displacement.M.GetRPY(ro_,pi_,ya_);
     dis_vector_r.data[0] = ro_;
@@ -61,33 +54,26 @@ bool trajectory_generator::valve_line_trajectory(double t, KDL::Frame& pos_d, KD
     
     if(t >= 0.0 && t<=valve_line_param.time)
     {
-	  temp_vector_p = start_vector_p + polynomial_interpolation(poly,dis_vector_p,t,valve_line_param.time);
+          pos_d.p = valve_line_param.start.p + polynomial_interpolation(poly,valve_line_param.displacement.p,t,valve_line_param.time);
 	  temp_vector_r = start_vector_r + polynomial_interpolation(poly,dis_vector_r,t,valve_line_param.time);
 	  
-	  temp_vel_vector_p = polynomial_interpolation(vel_poly,dis_vector_p,t,valve_line_param.time);
+          temp_vel_vector_p = polynomial_interpolation(vel_poly,valve_line_param.displacement.p,t,valve_line_param.time);
 	  temp_vel_vector_r = polynomial_interpolation(vel_poly,dis_vector_r,t,valve_line_param.time);
-	  
-	  pos_d.p.x(temp_vector_p.data[0]);
-	  pos_d.p.y(temp_vector_p.data[1]);
-	  pos_d.p.z(temp_vector_p.data[2]);
+
 	  pos_d.M = KDL::Rotation::RPY(temp_vector_r.data[0],temp_vector_r.data[1],temp_vector_r.data[2]);
 	  	  
-	  vel_d.vel.x(temp_vel_vector_p.data[0]);
-	  vel_d.vel.y(temp_vel_vector_p.data[1]);
-	  vel_d.vel.z(temp_vel_vector_p.data[2]);
-	  vel_d.rot.x(temp_vel_vector_r.data[0]);
-	  vel_d.rot.y(temp_vel_vector_r.data[1]);
-	  vel_d.rot.z(temp_vel_vector_r.data[2]);
+          vel_d.vel=temp_vel_vector_p;
+	  vel_d.rot=temp_vel_vector_r;
     }
     else if (t > valve_line_param.time)
     {
-	  pos_d.p = start_vector_p + dis_vector_p;
+          pos_d.p = valve_line_param.start.p + valve_line_param.displacement.p;
 	  pos_d.M = KDL::Rotation::RPY(start_vector_r.data[0] + dis_vector_r.data[0],start_vector_r.data[1] + dis_vector_r.data[1],start_vector_r.data[2] + dis_vector_r.data[2]);
 	  
 	  vel_d.vel= KDL::Vector::Zero();
 	  vel_d.rot = KDL::Vector::Zero();
+
     }
-    
     return true;
 }
 
