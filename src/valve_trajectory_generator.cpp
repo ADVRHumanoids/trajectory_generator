@@ -177,13 +177,15 @@ bool trajectory_generator::valve_turn_initialize(double time, double radius, dou
     valve_turn_param.time=time;
     valve_turn_param.start = start;
     valve_turn_param.radius = radius;
-    valve_turn_param.center_angle = center_angle;
+    double ro,pi,ya;
+    start.M.GetRPY(ro, pi, ya);
+    valve_turn_param.center_angle = ya-center_angle;
     valve_turn_param.initialized = true;
     
     return true;
 }
 
-double trajectory_generator::valve_turn_trajectory(double t, KDL::Rotation& ROTv, KDL::Frame& pos_d, KDL::Twist& vel_d)
+double trajectory_generator::valve_turn_trajectory_old(double t, KDL::Rotation& ROTv, KDL::Frame& pos_d, KDL::Twist& vel_d)
 {
     double Xf1;
     
@@ -216,9 +218,9 @@ double trajectory_generator::valve_turn_trajectory(double t, KDL::Rotation& ROTv
 
         //Transformation Xd_v to Xd
         //position
-	pos_d.p = valve_circle_param.start.p + ROTv*Xd_v_p;
+	pos_d.p = valve_turn_param.start.p + ROTv*Xd_v_p;
     }
-    else if (t > valve_circle_param.time)
+    else if (t > valve_turn_param.time)
     {
         CircleAngle = -25*M_PI/180 + Xf1;
 
@@ -229,11 +231,50 @@ double trajectory_generator::valve_turn_trajectory(double t, KDL::Rotation& ROTv
 
         Xd_v_p.data[2] = 0.0;
 
-	pos_d.p = valve_circle_param.start.p + ROTv*Xd_v_p;
+	pos_d.p = valve_turn_param.start.p + ROTv*Xd_v_p;
 
     }
     
     pos_d.M = KDL::Rotation::RotZ(CircleAngle);
 
     return CircleAngle;
+}
+
+bool trajectory_generator::valve_turn_trajectory(double t, KDL::Frame& pos_d, KDL::Twist& vel_d)
+{
+    polynomial_coefficients poly,vel_poly;
+    vel_poly.set_polynomial_coeff(60.0, -120.0, 60);
+    
+    double CircleAngle=0.0, DCircleAngle=0.0;
+
+    if(t>=0.0 && t<=valve_turn_param.time)
+    {
+        CircleAngle = polynomial_interpolation(poly,valve_turn_param.center_angle,t,valve_turn_param.time);
+        DCircleAngle = polynomial_interpolation(vel_poly,valve_turn_param.center_angle,t,valve_turn_param.time);
+
+	// change x and y
+	pos_d.p.data[0] = valve_turn_param.start.p.data[0] + valve_turn_param.radius*cos(M_PI/2.0-CircleAngle);
+	pos_d.p.data[1] = valve_turn_param.start.p.data[1] + valve_turn_param.radius*sin(M_PI/2.0-CircleAngle);
+	// change yaw
+	double ro,pi,ya;
+	valve_turn_param.start.M.GetRPY(ro, pi, ya);
+	ya += -CircleAngle;
+	pos_d.M.EulerZYX(ro, pi, ya);
+    }
+    else if (t > valve_turn_param.time)
+    {
+        CircleAngle = valve_turn_param.center_angle;
+	
+	// change x and y
+	pos_d.p.data[0] = valve_turn_param.start.p.data[0] + valve_turn_param.radius*cos(M_PI/2.0-CircleAngle);
+	pos_d.p.data[1] = valve_turn_param.start.p.data[1] + valve_turn_param.radius*sin(M_PI/2.0-CircleAngle);
+	// change yaw
+	double ro,pi,ya;
+	valve_turn_param.start.M.GetRPY(ro, pi, ya);
+	ya += -CircleAngle;
+	pos_d.M.EulerZYX(ro, pi, ya);
+
+    }
+    
+    return true;
 }
