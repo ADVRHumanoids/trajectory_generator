@@ -183,7 +183,7 @@ bool trajectory_generator::valve_turn_initialize(double time, double radius, dou
     return true;
 }
 
-double trajectory_generator::valve_turn_trajectory(double t, KDL::Rotation& ROTv, KDL::Frame& pos_d, KDL::Frame& vel_d)
+double trajectory_generator::valve_turn_trajectory(double t, KDL::Rotation& ROTv, KDL::Frame& pos_d, KDL::Twist& vel_d)
 {
     double Xf1;
     
