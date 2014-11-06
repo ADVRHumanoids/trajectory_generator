@@ -163,7 +163,7 @@ public:
   
     bool initialized;
     double time;
-    KDL::Frame start;
+    KDL::Frame start, valve;
     double center_angle;
     double radius;
 };

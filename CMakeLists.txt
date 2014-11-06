@@ -10,6 +10,7 @@ include(ExternalProject)
 
 set(VARS_PREFIX "TRAJECTORY_GENERATOR")
 find_package(YCM REQUIRED)
+
 include(YCMDefaultDirs)
 ycm_default_dirs(${VARS_PREFIX})
 #end superbuild stuff
@@ -38,7 +39,7 @@ find_package(Boost REQUIRED COMPONENTS system)
 find_package(roscpp REQUIRED)
 find_package(octomap REQUIRED)
 find_package(message_generation REQUIRED)
-find_package(catkin REQUIRED COMPONENTS roscpp octomap octomap_ros octomap_msgs)
+find_package(catkin REQUIRED COMPONENTS roscpp octomap octomap_ros octomap_msgs tf tf_conversions)
 ## System dependencies are found with CMake's conventions
 find_package(YARP REQUIRED)
 find_package(ICUB REQUIRED)

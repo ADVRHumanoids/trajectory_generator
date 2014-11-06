@@ -67,7 +67,7 @@ public:
     
     double valve_turn_trajectory_old(double t, KDL::Rotation& ROTv, KDL::Frame& pos_d, KDL::Twist& vel_d);
     bool valve_turn_trajectory(double t, KDL::Frame& pos_d, KDL::Twist& vel_d);
-    bool valve_turn_initialize(double time, double radius, double center_angle, const KDL::Frame& start);
+    bool valve_turn_initialize(double time, double radius, double center_angle, const KDL::Frame& start, const KDL::Frame& valve);
     
 private:
     line_parameters line_param;

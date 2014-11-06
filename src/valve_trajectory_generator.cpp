@@ -13,6 +13,9 @@
  * limitations under the License.*/
 
 #include <trajectory_generator/trajectory_generator.h>
+#include <tf_conversions/tf_kdl.h>
+#include <tf/tf.h>
+#include <tf/transform_broadcaster.h>
 
 bool trajectory_generator::valve_line_initialize(double time, const KDL::Frame& start, const KDL::Frame& final)
 {
@@ -170,21 +173,6 @@ double trajectory_generator::valve_circle_trajectory(double t, bool left_arm, KD
     return CircleAngle;
 }
 
-bool trajectory_generator::valve_turn_initialize(double time, double radius, double center_angle,const KDL::Frame& start)
-{
-    if(time<=0) return false;
-    
-    valve_turn_param.time=time;
-    valve_turn_param.start = start;
-    valve_turn_param.radius = radius;
-    double ro,pi,ya;
-    start.M.GetRPY(ro, pi, ya);
-    valve_turn_param.center_angle = ya-center_angle;
-    valve_turn_param.initialized = true;
-    
-    return true;
-}
-
 double trajectory_generator::valve_turn_trajectory_old(double t, KDL::Rotation& ROTv, KDL::Frame& pos_d, KDL::Twist& vel_d)
 {
     double Xf1;
@@ -240,6 +228,20 @@ double trajectory_generator::valve_turn_trajectory_old(double t, KDL::Rotation& 
     return CircleAngle;
 }
 
+bool trajectory_generator::valve_turn_initialize(double time, double radius, double center_angle,const KDL::Frame& start, const KDL::Frame& valve)
+{
+    if(time<=0) return false;
+    
+    valve_turn_param.time=time;
+    valve_turn_param.start = start;
+    valve_turn_param.valve = valve;
+    valve_turn_param.radius = radius;
+    valve_turn_param.center_angle = center_angle;
+    valve_turn_param.initialized = true;
+    
+    return true;
+}
+
 bool trajectory_generator::valve_turn_trajectory(double t, KDL::Frame& pos_d, KDL::Twist& vel_d)
 {
     polynomial_coefficients poly,vel_poly;
@@ -247,33 +249,37 @@ bool trajectory_generator::valve_turn_trajectory(double t, KDL::Frame& pos_d, KD
     
     double CircleAngle=0.0, DCircleAngle=0.0;
 
+    KDL::Frame Valve_Hand, Waist_ValveRotating, Waist_HandRotating, ValveRotating_HandRotating;
+    KDL::Frame Waist_Hand(valve_turn_param.start);
+    KDL::Frame Waist_Valve(valve_turn_param.valve);
+    Valve_Hand = Waist_Valve.Inverse()*Waist_Hand;
+    
     if(t>=0.0 && t<=valve_turn_param.time)
     {
         CircleAngle = polynomial_interpolation(poly,valve_turn_param.center_angle,t,valve_turn_param.time);
         DCircleAngle = polynomial_interpolation(vel_poly,valve_turn_param.center_angle,t,valve_turn_param.time);
-
-	// change x and y
-	pos_d.p.data[0] = valve_turn_param.start.p.data[0] + valve_turn_param.radius*cos(M_PI/2.0-CircleAngle);
-	pos_d.p.data[1] = valve_turn_param.start.p.data[1] + valve_turn_param.radius*sin(M_PI/2.0-CircleAngle);
-	// change yaw
-	double ro,pi,ya;
-	valve_turn_param.start.M.GetRPY(ro, pi, ya);
-	ya += -CircleAngle;
-	pos_d.M.EulerZYX(ro, pi, ya);
+	
+	Waist_ValveRotating.M = Waist_Valve.M * KDL::Rotation::RotX(CircleAngle);
+	
+	ros::Duration sleep_time(0.05);
+	static tf::TransformBroadcaster br;
+	tf::Transform current_robot_transform;
+	tf::transformKDLToTF(Waist_ValveRotating,current_robot_transform);
+	br.sendTransform(tf::StampedTransform(current_robot_transform, ros::Time::now(), "Waist", "VALVE_ANGLE"));
+	sleep_time.sleep();
+	
+	ValveRotating_HandRotating.p = KDL::Vector(0,-valve_turn_param.radius,0);
+	Waist_HandRotating = Waist_ValveRotating*ValveRotating_HandRotating;	
+	pos_d = Waist_Hand * Waist_HandRotating;
+	
     }
     else if (t > valve_turn_param.time)
     {
         CircleAngle = valve_turn_param.center_angle;
-	
-	// change x and y
-	pos_d.p.data[0] = valve_turn_param.start.p.data[0] + valve_turn_param.radius*cos(M_PI/2.0-CircleAngle);
-	pos_d.p.data[1] = valve_turn_param.start.p.data[1] + valve_turn_param.radius*sin(M_PI/2.0-CircleAngle);
-	// change yaw
-	double ro,pi,ya;
-	valve_turn_param.start.M.GetRPY(ro, pi, ya);
-	ya += -CircleAngle;
-	pos_d.M.EulerZYX(ro, pi, ya);
-
+	Waist_ValveRotating.M = Waist_Valve.M * KDL::Rotation::RotX(CircleAngle);	
+	ValveRotating_HandRotating.p = KDL::Vector(0,-valve_turn_param.radius,0);
+	Waist_HandRotating = Waist_ValveRotating*ValveRotating_HandRotating;
+	pos_d = Waist_Hand * Waist_HandRotating;
     }
     
     return true;
