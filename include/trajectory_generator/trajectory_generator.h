@@ -58,16 +58,14 @@ public:
     void avoidObstacle();
     
     // VALVE TRAJECTORIES
-    
     bool valve_line_trajectory(double t, KDL::Frame& pos_d, KDL::Twist& vel_d );
     bool valve_line_initialize(double time, const KDL::Frame& start, const KDL::Frame& final);
+    bool valve_turn_trajectory(double t, KDL::Frame& pos_d, KDL::Twist& vel_d);
+    bool valve_turn_initialize(double time, double radius, double center_angle, const KDL::Frame& start, const KDL::Frame& valve);
     
     double valve_circle_trajectory(double t, bool left_arm, KDL::Rotation& ROTe, KDL::Frame& pos_d, KDL::Frame& vel_d);
     bool valve_circle_initialize(double time, double radius, double center_angle, const KDL::Frame& start);
     
-    double valve_turn_trajectory_old(double t, KDL::Rotation& ROTv, KDL::Frame& pos_d, KDL::Twist& vel_d);
-    bool valve_turn_trajectory(double t, KDL::Frame& pos_d, KDL::Twist& vel_d);
-    bool valve_turn_initialize(double time, double radius, double center_angle, const KDL::Frame& start, const KDL::Frame& valve);
     
 private:
     line_parameters line_param;

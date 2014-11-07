@@ -80,6 +80,49 @@ bool trajectory_generator::valve_line_trajectory(double t, KDL::Frame& pos_d, KD
     return true;
 }
 
+bool trajectory_generator::valve_turn_initialize(double time, double radius, double center_angle,const KDL::Frame& start, const KDL::Frame& valve)
+{
+    if(time<=0) return false;
+    
+    valve_turn_param.time=time;
+    valve_turn_param.start = start;
+    valve_turn_param.valve = valve;
+    valve_turn_param.radius = radius;
+    valve_turn_param.center_angle = center_angle;
+    valve_turn_param.initialized = true;
+    
+    return true;
+}
+
+bool trajectory_generator::valve_turn_trajectory(double t, KDL::Frame& pos_d, KDL::Twist& vel_d)
+{
+    polynomial_coefficients poly,vel_poly;
+    vel_poly.set_polynomial_coeff(60.0, -120.0, 60);
+    
+    double CircleAngle=0.0, DCircleAngle=0.0;
+
+    KDL::Frame Valve_Hand, Waist_ValveRotating, Waist_HandRotating, Valve_HandRotating;
+    KDL::Frame Waist_Hand(valve_turn_param.start);
+    KDL::Frame Waist_Valve(valve_turn_param.valve);
+    Valve_Hand = Waist_Valve.Inverse()*Waist_Hand;
+    
+    if(t>=0.0 && t<=valve_turn_param.time)
+    {
+        CircleAngle = polynomial_interpolation(poly,valve_turn_param.center_angle,t,valve_turn_param.time);
+	DCircleAngle = polynomial_interpolation(vel_poly,valve_turn_param.center_angle,t,valve_turn_param.time); // NOT USED
+    }
+    else if (t > valve_turn_param.time)
+    {
+        CircleAngle = valve_turn_param.center_angle;
+    }
+    
+    Valve_HandRotating=KDL::Frame(KDL::Rotation::RotX(CircleAngle))*Valve_Hand;
+    Waist_HandRotating=Waist_Valve*Valve_HandRotating;
+    pos_d = Waist_HandRotating;
+    
+    return true;
+}
+
 bool trajectory_generator::valve_circle_initialize(double time, double radius, double center_angle, const KDL::Frame& start)
 {
     if(time<=0) return false;
@@ -171,107 +214,4 @@ double trajectory_generator::valve_circle_trajectory(double t, bool left_arm, KD
     }
 
     return CircleAngle;
-}
-
-double trajectory_generator::valve_turn_trajectory_old(double t, KDL::Rotation& ROTv, KDL::Frame& pos_d, KDL::Twist& vel_d)
-{
-    double Xf1;
-    
-    polynomial_coefficients poly,vel_poly;
-    vel_poly.set_polynomial_coeff(60.0, -120.0, 60);
-    
-    KDL::Vector Xd_v_p, dXd_v_p;
-    
-    Xd_v_p = KDL::Vector::Zero();
-    dXd_v_p = KDL::Vector::Zero();
-    
-    double CircleAngle=0.0, DCircleAngle=0.0;
-    Xf1 = valve_turn_param.center_angle;
-
-    if(t>=0.0 && t<=valve_turn_param.time)
-    {
-        CircleAngle = -25*M_PI/180 + polynomial_interpolation(poly,Xf1,t,valve_turn_param.time);
-        DCircleAngle = polynomial_interpolation(vel_poly,Xf1,t,valve_circle_param.time);
-
-        //Xv axis
-        Xd_v_p.data[0] =  valve_turn_param.radius*cos(M_PI/2.0- CircleAngle) ;
-        dXd_v_p.data[0] = -valve_turn_param.radius*sin(M_PI/2.0- CircleAngle)*DCircleAngle;
-
-        //Yv axis
-        Xd_v_p.data[1] = valve_turn_param.radius*(sin(M_PI/2.0- CircleAngle));
-        dXd_v_p.data[1] = valve_turn_param.radius*cos(M_PI/2.0- CircleAngle)*DCircleAngle;
-
-        //Zv axis
-        Xd_v_p.data[2] = 0.0; dXd_v_p.data[2] = 0.0;
-
-        //Transformation Xd_v to Xd
-        //position
-	pos_d.p = valve_turn_param.start.p + ROTv*Xd_v_p;
-    }
-    else if (t > valve_turn_param.time)
-    {
-        CircleAngle = -25*M_PI/180 + Xf1;
-
-        //Xv axis
-        Xd_v_p.data[0] =  valve_turn_param.radius*cos(M_PI/2.0- CircleAngle) ;
-       //Yv axis
-        Xd_v_p.data[1] = valve_turn_param.radius*(sin(M_PI/2.0- CircleAngle));
-
-        Xd_v_p.data[2] = 0.0;
-
-	pos_d.p = valve_turn_param.start.p + ROTv*Xd_v_p;
-
-    }
-    
-    pos_d.M = KDL::Rotation::RotZ(CircleAngle);
-
-    return CircleAngle;
-}
-
-bool trajectory_generator::valve_turn_initialize(double time, double radius, double center_angle,const KDL::Frame& start, const KDL::Frame& valve)
-{
-    if(time<=0) return false;
-    
-    valve_turn_param.time=time;
-    valve_turn_param.start = start;
-    valve_turn_param.valve = valve;
-    valve_turn_param.radius = radius;
-    valve_turn_param.center_angle = center_angle;
-    valve_turn_param.initialized = true;
-    
-    return true;
-}
-
-bool trajectory_generator::valve_turn_trajectory(double t, KDL::Frame& pos_d, KDL::Twist& vel_d)
-{
-    polynomial_coefficients poly,vel_poly;
-    vel_poly.set_polynomial_coeff(60.0, -120.0, 60);
-    
-    double CircleAngle=0.0, DCircleAngle=0.0;
-
-    KDL::Frame Valve_Hand, Waist_ValveRotating, Waist_HandRotating, Valve_HandRotating;
-    KDL::Frame Waist_Hand(valve_turn_param.start);
-    KDL::Frame Waist_Valve(valve_turn_param.valve);
-    Valve_Hand = Waist_Valve.Inverse()*Waist_Hand;
-    
-    if(t>=0.0 && t<=valve_turn_param.time)
-    {
-        CircleAngle = polynomial_interpolation(poly,valve_turn_param.center_angle,t,valve_turn_param.time);
-    }
-    else if (t > valve_turn_param.time)
-    {
-        CircleAngle = valve_turn_param.center_angle;
-    }
-    
-    
-    DCircleAngle = polynomial_interpolation(vel_poly,valve_turn_param.center_angle,t,valve_turn_param.time);
-    
-    
-    Valve_HandRotating=KDL::Frame(KDL::Rotation::RotX(CircleAngle))*Valve_Hand;
-    
-    Waist_HandRotating=Waist_Valve*Valve_HandRotating;
-    
-    pos_d = Waist_HandRotating;
-    
-    return true;
 }
