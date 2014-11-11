@@ -14,7 +14,7 @@
 
 #include <iostream>
 #include <yarp/os/all.h>
-#include <drc_shared/generic_module.hpp>
+#include <GYM/generic_module.hpp>
 #include "trajectory_generator_thread.h"
 #include "trajectory_generator_module.hpp"
 

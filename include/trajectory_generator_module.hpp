@@ -15,7 +15,7 @@
 #ifndef TRJ_GEN_MOD_H
 #define TRJ_GEN_MOD_H
 
-#include <drc_shared/generic_module.hpp>
+#include <GYM/generic_module.hpp>
 #include "trajectory_generator_thread.h"
 
 class trajectory_generator_module: public generic_module<trajectory_generator_thread>

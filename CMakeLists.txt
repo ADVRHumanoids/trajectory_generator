@@ -45,6 +45,8 @@ find_package(YARP REQUIRED)
 find_package(ICUB REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(drc_shared REQUIRED)
+find_package(idynutils REQUIRED)
+find_package(GYM REQUIRED)
 find_package(kdl_codyco REQUIRED)
 find_package(TinyXML REQUIRED)
 find_package(paramHelp REQUIRED)
@@ -62,7 +64,9 @@ catkin_package(
 add_subdirectory(app)
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-include_directories(include ${YARP_INCLUDE_DIRS}  ${iDynTree_INCLUDE_DIRS} ${ICUB_INCLUDE_DIRS} ${Eigen_INCLUDE_DIRS} ${drc_shared_INCLUDE_DIRS} ${paramHelp_INCLUDE_DIRS})
+include_directories(include ${YARP_INCLUDE_DIRS}  ${iDynTree_INCLUDE_DIRS} 
+                            ${ICUB_INCLUDE_DIRS} ${Eigen_INCLUDE_DIRS} ${paramHelp_INCLUDE_DIRS}
+                            ${idynutils_INCLUDE_DIRS} ${drc_shared_INCLUDE_DIRS} ${GYM_INCLUDE_DIRS})
 
 FILE(GLOB_RECURSE HEADER_FILES include/trajectory_generator/*.h)
 
@@ -115,7 +119,9 @@ target_link_libraries(trajectory_generator
         ${Eigen_LIBRARIES}
         ${YARP_LIBRARIES}
         ${paramHelp_LIBRARIES}
+        ${idynutils_LIBRARIES}
         ${drc_shared_LIBRARIES}
+        ${GYM_LIBRARIES}
         ${iDynTree_LIBRARIES}
         ${Octomap_LIBRARIES}
         ${catkin_LIBRARIES}

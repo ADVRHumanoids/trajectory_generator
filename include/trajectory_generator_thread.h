@@ -17,10 +17,11 @@
 
 
 #include <yarp/os/all.h>
-#include <drc_shared/yarp_status_interface.h>
+#include <GYM/yarp_status_interface.h>
+#include <GYM/yarp_switch_interface.hpp>
 #include <drc_shared/yarp_rpc_interface.hpp>
 #include <drc_shared/yarp_msgs/trj_generator_msg.h>
-#include <drc_shared/generic_thread.hpp>
+#include <GYM/generic_thread.hpp>
 #include <trajectory_generator/trajectory_generator.h>
 
 class trajectory_generator_thread: public generic_thread
@@ -37,7 +38,7 @@ private:
     trajectory_generator trj_generator;
     trj_generator_input_msg in_msg;
     trj_generator_output_msg out_msg;
-    walkman::drc::yarp_status_interface status_interface;
+    walkman::yarp_status_interface status_interface;
     
     void compute_line_trj(trj_generator_input_msg& in, trj_generator_output_msg& out);
     void compute_circle_trj(trj_generator_input_msg& in, trj_generator_output_msg& out);
