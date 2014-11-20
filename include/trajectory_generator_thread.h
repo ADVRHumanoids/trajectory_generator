@@ -41,7 +41,7 @@ private:
     walkman::yarp_status_interface status_interface;
     
     void compute_line_trj(trj_generator_input_msg& in, trj_generator_output_msg& out);
-    void compute_circle_trj(trj_generator_input_msg& in, trj_generator_output_msg& out);
+    void compute_custom_circle_trj(trj_generator_input_msg& in, trj_generator_output_msg& out);
     
 public:
     

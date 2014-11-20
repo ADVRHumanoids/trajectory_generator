@@ -31,28 +31,17 @@ bool trajectory_generator_thread::custom_init()
 
 void trajectory_generator_thread::compute_line_trj(trj_generator_input_msg& in, trj_generator_output_msg& out)
 {    
-    trj_generator.set_line_time(in.time);
-    trj_generator.set_line_start(in.start);
-    trj_generator.set_line_displacement(in.displacement);
-    
-    trj_generator.line_trajectory(out.trj);
+    trj_generator.line_initialize(in.time,in.start,in.displacement);
+//     trj_generator.line_trajectory(out.trj); TODO correct this
     
     out.command="result_trj";
 }
 
 
-void trajectory_generator_thread::compute_circle_trj(trj_generator_input_msg& in, trj_generator_output_msg& out)
-{
-    trj_generator.set_circle_time(in.time);
-    trj_generator.set_circle_start(in.start);
-    trj_generator.set_circle_displacement(in.displacement);
-    
-    trj_generator.set_circle_radius(in.radius);
-    trj_generator.set_circle_center_angle(in.center_angle);
-    trj_generator.set_circle_hand_ee(in.hand);
-    trj_generator.set_circle_left_ee(in.left);
-    
-    trj_generator.circle_trajectory(out.trj);
+void trajectory_generator_thread::compute_custom_circle_trj(trj_generator_input_msg& in, trj_generator_output_msg& out)
+{    
+    trj_generator.custom_circle_initialize(in.time, in.start, in.displacement, in.left, in.hand, in.center_angle, in.radius);
+    trj_generator.custom_circle_trajectory(out.trj);
     
     out.command="result_trj";
 }
@@ -75,7 +64,7 @@ void trajectory_generator_thread::run()
 	}
 	if(command=="circle")
 	{
-	    compute_circle_trj(in_msg,out_msg);
+	    compute_custom_circle_trj(in_msg,out_msg);
 	    rpc_server.reply(out_msg,seq_num);   
 	}
     }

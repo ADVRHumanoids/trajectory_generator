@@ -30,109 +30,134 @@ double trajectory_generator::polynomial_interpolation(const polynomial_coefficie
     return poly.a()*value_f/(2.0*pow(t_f,3))*pow(time,3) + (poly.b()*value_f)/(2.0*pow(t_f,4))*pow(time,4) + (poly.c()*value_f)/(2.0*pow(t_f,5))*pow(time,5);
 }
 
-void trajectory_generator::set_line_time(double time)
+bool trajectory_generator::line_initialize(double time, const KDL::Frame& start, const KDL::Frame& final)
 {
-    line_param.time = time;
-}
-
-void trajectory_generator::set_line_start(KDL::Frame start)
-{
-    line_param.start = start;
-}
-
-void trajectory_generator::set_line_displacement(const KDL::Frame& displacement)
-{
-    line_param.displacement = displacement;
-}
-
-void trajectory_generator::line_trajectory(std::map<double,KDL::Frame>& trj)
-{
-    trj.clear();
+    if(time<=0) return false;
     
-    polynomial_coefficients poly;
-  
-    KDL::Frame temp_frame;
-    KDL::Vector temp_vector_p, start_vector_p, dis_vector_p;
-    KDL::Vector temp_vector_r, start_vector_r, dis_vector_r;
+    line_param.time = time;
+    line_param.start = start;
+    line_param.displacement.p = final.p-start.p;
+    double r,p,y,r1,p1,y1;
+    start.M.GetRPY(r,p,y);
+    final.M.GetRPY(r1,p1,y1);
+    line_param.displacement.M=KDL::Rotation::RPY(r1-r,p1-p,y1-y);
+    // NOTE using quaternions use the line down here
+//     line_param.displacement.M=final.M;
+    line_param.initialized = true;
+    return true;
+}
 
-    start_vector_p.data[0] = line_param.start.p.x();
-    start_vector_p.data[1] = line_param.start.p.y();
-    start_vector_p.data[2] = line_param.start.p.z();
+bool trajectory_generator::line_trajectory(double t, KDL::Frame& pos_d, KDL::Twist& vel_d)
+{
+    if(!line_param.initialized) return false;
+  
+    polynomial_coefficients poly,vel_poly;
+    vel_poly.set_polynomial_coeff(60.0, -120.0, 60);
+    
+    KDL::Vector temp_vector_r, start_vector_r, dis_vector_r;
+    
+    KDL::Vector temp_vel_vector_p, temp_vel_vector_r;
+
     double ro,pi,ya;
     line_param.start.M.GetRPY(ro,pi,ya);
     start_vector_r.data[0] = ro;
     start_vector_r.data[1] = pi;
     start_vector_r.data[2] = ya;
-
-//     std::cout<<"TRJ: from ("<<line_param.start.p.x()<<' '<<line_param.start.p.y()<<' '<<line_param.start.p.z()<<' '<<ro<<' '<<pi<<' '<<ya<<") ";
-    
-    dis_vector_p.data[0] = line_param.displacement.p.x();
-    dis_vector_p.data[1] = line_param.displacement.p.y();
-    dis_vector_p.data[2] = line_param.displacement.p.z();
+        
     double ro_,pi_,ya_;
     line_param.displacement.M.GetRPY(ro_,pi_,ya_);
     dis_vector_r.data[0] = ro_;
     dis_vector_r.data[1] = pi_;
     dis_vector_r.data[2] = ya_;
-
-//     std::cout<<"to ("<<line_param.displacement.p.x()<<' '<<line_param.displacement.p.y()<<' '<<line_param.displacement.p.z()<<' '<<ro_<<' '<<pi_<<' '<<ya_<<") in "<<line_param.time<<" [s]"<<std::endl;
     
-//     std::cout<<"(line ";
+    //NOTE for quaternion SLERP
+//     Eigen::Quaternion<double> q_start, q_end, q_interp;
+//     line_param.start.M.GetQuaternion(q_start.x(),q_start.y(),q_start.z(),q_start.w());
+//     line_param.displacement.M.GetQuaternion(q_end.x(),q_end.y(),q_end.z(),q_end.w());
     
-    for(double t=0;t<=line_param.time;t=t+0.01)
+    if(t >= 0.0 && t<=line_param.time)
     {
-	  temp_vector_p = start_vector_p + polynomial_interpolation(poly,dis_vector_p,t,line_param.time);
+          pos_d.p = line_param.start.p + polynomial_interpolation(poly,line_param.displacement.p,t,line_param.time);
 	  temp_vector_r = start_vector_r + polynomial_interpolation(poly,dis_vector_r,t,line_param.time);
 	  
-	  temp_frame.p.x(temp_vector_p.data[0]);
-	  temp_frame.p.y(temp_vector_p.data[1]);
-	  temp_frame.p.z(temp_vector_p.data[2]);
-	  temp_frame.M = KDL::Rotation::RPY(temp_vector_r.data[0],temp_vector_r.data[1],temp_vector_r.data[2]);
+          temp_vel_vector_p = polynomial_interpolation(vel_poly,line_param.displacement.p,t,line_param.time);
+	  temp_vel_vector_r = polynomial_interpolation(vel_poly,dis_vector_r,t,line_param.time);
+
+	  pos_d.M = KDL::Rotation::RPY(temp_vector_r.data[0],temp_vector_r.data[1],temp_vector_r.data[2]);
+
+// 	  q_interp = q_start.slerp(t,q_end);
+// 	  pos_d.M = KDL::Rotation::Quaternion(q_interp.x(),q_interp.y(),q_interp.z(),q_interp.w());
 	  
-	  trj[t] = temp_frame;
-// 	  std::cout<<t<<' '<<temp_vector_p.data[0]<<' '<<temp_vector_p.data[1]<<' '<<temp_vector_p.data[2]<<' '<<temp_vector_r.data[0]<<' '<<temp_vector_r.data[1]<<' '<<temp_vector_r.data[2]<<' ';
-	  
+          vel_d.vel=temp_vel_vector_p;
+	  vel_d.rot=temp_vel_vector_r;
     }
-        
-//     std::cout<<')'<<std::endl;
+    else if (t > line_param.time)
+    {
+          pos_d.p = line_param.start.p + line_param.displacement.p;
+	  pos_d.M = KDL::Rotation::RPY(start_vector_r.data[0] + dis_vector_r.data[0],start_vector_r.data[1] + dis_vector_r.data[1],start_vector_r.data[2] + dis_vector_r.data[2]);
+// 	  pos_d.M = KDL::Rotation::Quaternion(q_end.x(),q_end.y(),q_end.z(),q_end.w());
+	  
+	  vel_d.vel= KDL::Vector::Zero();
+	  vel_d.rot = KDL::Vector::Zero();
+    }
+    return true;
 }
 
-void trajectory_generator::set_circle_center_angle(double angle)
+bool trajectory_generator::circle_initialize(double time, double radius, double center_angle, const KDL::Frame& start, const KDL::Frame& object)
 {
-    circle_param.center_angle = angle;
-}
-
-void trajectory_generator::set_circle_displacement(const KDL::Frame& displacement)
-{
-    circle_param.displacement = displacement;
-}
-
-void trajectory_generator::set_circle_start(KDL::Frame start)
-{
+    if(time<=0) return false;
+    
+    circle_param.time=time;
     circle_param.start = start;
-}
-
-void trajectory_generator::set_circle_hand_ee(bool hand)
-{
-    circle_param.hand = hand;
-}
-
-void trajectory_generator::set_circle_left_ee(bool left)
-{
-    circle_param.left = left;
-}
-
-void trajectory_generator::set_circle_radius(double radius)
-{
+    circle_param.object = object;
     circle_param.radius = radius;
+    circle_param.center_angle = center_angle;
+    circle_param.initialized = true;
+    
+    return true;
 }
 
-void trajectory_generator::set_circle_time(double time)
+bool trajectory_generator::circle_trajectory(double t, KDL::Frame& pos_d, KDL::Twist& vel_d)
 {
-    circle_param.time = time;
+    polynomial_coefficients poly,vel_poly;
+    vel_poly.set_polynomial_coeff(60.0, -120.0, 60);
+    
+    double CircleAngle=0.0, DCircleAngle=0.0;
+
+    KDL::Frame Object_Hand, Waist_ObjectRotating, Waist_HandRotating, Object_HandRotating;
+    KDL::Frame Waist_Hand(circle_param.start);
+    KDL::Frame Waist_Object(circle_param.object);
+    Object_Hand = Waist_Object.Inverse()*Waist_Hand;
+    
+    if(t>=0.0 && t<=circle_param.time)
+    {
+        CircleAngle = polynomial_interpolation(poly,circle_param.center_angle,t,circle_param.time);
+	DCircleAngle = polynomial_interpolation(vel_poly,circle_param.center_angle,t,circle_param.time); // NOT USED
+    }
+    else if (t > circle_param.time)
+    {
+        CircleAngle = circle_param.center_angle;
+    }
+    
+    Object_HandRotating=KDL::Frame(KDL::Rotation::RotX(CircleAngle))*Object_Hand;
+    Waist_HandRotating=Waist_Object*Object_HandRotating;
+    pos_d = Waist_HandRotating;
+    
+    return true;
 }
 
-void trajectory_generator::circle_trajectory(std::map<double,KDL::Frame>& trj)
+void trajectory_generator::custom_circle_initialize(double time, KDL::Frame start, const KDL::Frame& displacement, bool left, bool hand, double angle, double radius)
+{
+    custom_circle_param.center_angle = angle;
+    custom_circle_param.displacement = displacement;
+    custom_circle_param.start = start;
+    custom_circle_param.hand = hand;
+    custom_circle_param.left = left;
+    custom_circle_param.radius = radius;
+    custom_circle_param.time = time;
+}
+
+void trajectory_generator::custom_circle_trajectory(std::map<double,KDL::Frame>& trj)
 {
     trj.clear();
   
@@ -143,25 +168,25 @@ void trajectory_generator::circle_trajectory(std::map<double,KDL::Frame>& trj)
     KDL::Vector temp_vector_r, start_vector_r, dis_vector_r;
     
     double circle_angle;
-    double Xf1 = circle_param.center_angle;
-    double radius = circle_param.radius;
+    double Xf1 = custom_circle_param.center_angle;
+    double radius = custom_circle_param.radius;
 
-    start_vector_p.data[0] = circle_param.start.p.x();
-    start_vector_p.data[1] = circle_param.start.p.y();
-    start_vector_p.data[2] = circle_param.start.p.z();
+    start_vector_p.data[0] = custom_circle_param.start.p.x();
+    start_vector_p.data[1] = custom_circle_param.start.p.y();
+    start_vector_p.data[2] = custom_circle_param.start.p.z();
     double ro,pi,ya;
-    circle_param.start.M.GetRPY(ro,pi,ya);
+    custom_circle_param.start.M.GetRPY(ro,pi,ya);
     start_vector_r.data[0] = ro;
     start_vector_r.data[1] = pi;
     start_vector_r.data[2] = ya;
     
 //     std::cout<<"TRJ: from ("<<circle_param.start.p.x()<<' '<<circle_param.start.p.y()<<' '<<circle_param.start.p.z()<<' '<<ro<<' '<<pi<<' '<<ya<<") ";
     
-    dis_vector_p.data[0] = circle_param.displacement.p.x();
-    dis_vector_p.data[1] = circle_param.displacement.p.y();
-    dis_vector_p.data[2] = circle_param.displacement.p.z();
+    dis_vector_p.data[0] = custom_circle_param.displacement.p.x();
+    dis_vector_p.data[1] = custom_circle_param.displacement.p.y();
+    dis_vector_p.data[2] = custom_circle_param.displacement.p.z();
     double ro_,pi_,ya_;
-    circle_param.displacement.M.GetRPY(ro_,pi_,ya_);
+    custom_circle_param.displacement.M.GetRPY(ro_,pi_,ya_);
     dis_vector_r.data[0] = ro_;
     dis_vector_r.data[1] = pi_;
     dis_vector_r.data[2] = ya_;
@@ -172,30 +197,30 @@ void trajectory_generator::circle_trajectory(std::map<double,KDL::Frame>& trj)
 //     std::cout<<"(circle ";
 	       
     double mean_x = (2*start_vector_p.data[0]+dis_vector_p.data[0])/2.0;
-    if((!circle_param.hand) && (mean_x < 0)) Xf1=-Xf1;
+    if((!custom_circle_param.hand) && (mean_x < 0)) Xf1=-Xf1;
     double mean_y = (2*start_vector_p.data[1]+dis_vector_p.data[1])/2.0;
     double mean_z = (2*start_vector_p.data[2]+dis_vector_p.data[2])/2.0;
 
-    int index_1 = (2*(circle_param.hand)+(!circle_param.hand));
+    int index_1 = (2*(custom_circle_param.hand)+(!custom_circle_param.hand));
     
-    int index_2 = (2*(!circle_param.hand)+circle_param.hand);
+    int index_2 = (2*(!custom_circle_param.hand)+custom_circle_param.hand);
     
-    for(double t=0;t<=circle_param.time;t=t+0.01)
+    for(double t=0;t<=custom_circle_param.time;t=t+0.01)
     {
-	circle_angle = polynomial_interpolation(poly,Xf1,t,circle_param.time);
+	circle_angle = polynomial_interpolation(poly,Xf1,t,custom_circle_param.time);
 	circle_angle = circle_angle - atan2(dis_vector_p.data[index_2],dis_vector_p.data[0]);
 
 	temp_vector_p.data[index_1] = start_vector_p.data[index_1] + polynomial_interpolation(poly,dis_vector_p.data[index_1],t,circle_param.time);
 	
-	temp_vector_r = start_vector_r + polynomial_interpolation(poly,dis_vector_r,t,circle_param.time);
+	temp_vector_r = start_vector_r + polynomial_interpolation(poly,dis_vector_r,t,custom_circle_param.time);
 	
-        if(!circle_param.left) //RIGHT
+        if(!custom_circle_param.left) //RIGHT
 	{
 	    //Xd_v(0) = -Radius*cos(CircleAngle) ;
 	    //Xd_v(1) = Radius*(sin(CircleAngle));
 	    
 	    temp_vector_p.data[0]=-radius*cos(circle_angle)+mean_x;
-	    temp_vector_p.data[index_2]=radius*sin(circle_angle)+circle_param.hand*mean_y+(!circle_param.hand)*mean_z;
+	    temp_vector_p.data[index_2]=radius*sin(circle_angle)+custom_circle_param.hand*mean_y+(!custom_circle_param.hand)*mean_z;
         }
         else //LEFT
 	{
@@ -203,7 +228,7 @@ void trajectory_generator::circle_trajectory(std::map<double,KDL::Frame>& trj)
 	    //Xd_v(1) = -Radius*(sin(CircleAngle));
 
 	    temp_vector_p.data[0]=-radius*cos(circle_angle)+mean_x;
-	    temp_vector_p.data[index_2]=radius*sin(circle_angle)+circle_param.hand*mean_y+(!circle_param.hand)*mean_z;
+	    temp_vector_p.data[index_2]=radius*sin(circle_angle)+custom_circle_param.hand*mean_y+(!custom_circle_param.hand)*mean_z;
         }
         
         //Xd_v(2) = 0.0;
@@ -230,18 +255,10 @@ void trajectory_generator::circle_trajectory(std::map<double,KDL::Frame>& trj)
 // 				BEZIER CURVE METHODS
 // ************************************************************************************
 
-void trajectory_generator::set_bezier_time(double time)
+void trajectory_generator::bezier_initialize(double time, KDL::Frame start, KDL::Frame end)
 {
     bezier_param.time = time;
-}
-
-void trajectory_generator::set_bezier_start(KDL::Frame start)
-{
     bezier_param.start = start;
-}
-
-void trajectory_generator::set_bezier_end(KDL::Frame end)
-{
     bezier_param.end = end;
 }
 

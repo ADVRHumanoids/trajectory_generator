@@ -56,8 +56,10 @@ public:
 	start.M = KDL::Rotation::Identity();
 	displacement.p = KDL::Vector::Zero();
 	displacement.M = KDL::Rotation::Identity();
+	initialized = false;
     }
     
+    bool initialized;
     double time;
     KDL::Frame start;
     KDL::Frame displacement;  
@@ -67,6 +69,26 @@ class circle_parameters
 {
 public:
     circle_parameters()
+    {
+	initialized=false;
+	time=1;
+	start.p = KDL::Vector::Zero();
+	start.M = KDL::Rotation::Identity();
+	center_angle=0;
+	radius=1;
+    }
+  
+    bool initialized;
+    double time;
+    KDL::Frame start, object;
+    double center_angle;
+    double radius;
+};
+
+class custom_circle_parameters
+{
+public:
+    custom_circle_parameters()
     {
 	time=1;
 	start.p = KDL::Vector::Zero();
@@ -107,65 +129,6 @@ public:
     KDL::Frame end; 
     bezier_curve* bz_fun;
 
-};
-
-class valve_line_parameters
-{
-public:
-    valve_line_parameters()
-    {
-	time=1;
-	start.p = KDL::Vector::Zero();
-	start.M = KDL::Rotation::Identity();
-	displacement.p = KDL::Vector::Zero();
-	displacement.M = KDL::Rotation::Identity();
-	initialized = false;
-    }
-    
-    bool initialized;
-    double time;
-    KDL::Frame start;
-    KDL::Frame displacement;  
-};
-
-class valve_circle_parameters
-{
-public:
-    valve_circle_parameters()
-    {
-	initialized=false;
-	time=1;
-	start.p = KDL::Vector::Zero();
-	start.M = KDL::Rotation::Identity();
-	center_angle=0;
-	radius=1;
-    }
-  
-    bool initialized;
-    double time;
-    KDL::Frame start;
-    double center_angle;
-    double radius;
-};
-
-class valve_turn_parameters
-{
-public:
-    valve_turn_parameters()
-    {
-	initialized=false;
-	time=1;
-	start.p = KDL::Vector::Zero();
-	start.M = KDL::Rotation::Identity();
-	center_angle=0;
-	radius=1;
-    }
-  
-    bool initialized;
-    double time;
-    KDL::Frame start, valve;
-    double center_angle;
-    double radius;
 };
 
 #endif //CURVE_TYPES_H

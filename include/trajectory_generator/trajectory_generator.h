@@ -32,48 +32,31 @@ public:
     
     KDL::Vector polynomial_interpolation(const polynomial_coefficients& poly, const KDL::Vector& vec_f, double time, double t_f);
     double polynomial_interpolation(const polynomial_coefficients& poly, double value_f, double time, double t_f);
+    
     // GENERIC TRAJECTORIES
+    bool line_trajectory(double t, KDL::Frame& pos_d, KDL::Twist& vel_d );
+    bool line_initialize(double time, const KDL::Frame& start, const KDL::Frame& final);
+    bool circle_trajectory(double t, KDL::Frame& pos_d, KDL::Twist& vel_d);
+    bool circle_initialize(double time, double radius, double center_angle, const KDL::Frame& start, const KDL::Frame& object);
     
-    void line_trajectory(std::map<double,KDL::Frame>& trj);
-    void set_line_time(double time);
-    void set_line_start(KDL::Frame start);
-    void set_line_displacement(const KDL::Frame& displacement);
+    // CUSTOM CIRCLE
+    void custom_circle_trajectory(std::map<double,KDL::Frame>& trj);
+    void custom_circle_initialize(double time, KDL::Frame start, const KDL::Frame& displacement, 
+				  bool left, bool hand, double angle, double radius);
     
-    void circle_trajectory(std::map<double,KDL::Frame>& trj);
-    void set_circle_time(double time);
-    void set_circle_start(KDL::Frame start);
-    void set_circle_displacement(const KDL::Frame& displacement);
-    void set_circle_left_ee(bool left);
-    void set_circle_hand_ee(bool hand);
-    void set_circle_center_angle(double angle);
-    void set_circle_radius(double radius);
-    
+    // BEZIER TRAJECTORIES
+    void bezier_initialize(double time, KDL::Frame start, KDL::Frame end);
     void bezier_trajectory(std::map<double,KDL::Frame>& trj);
-    void set_bezier_time(double time);
-    void set_bezier_start(KDL::Frame start);
-    void set_bezier_end(KDL::Frame end);
     bool trajInCollision();
     void computeNeighborsCOM();
     void computeBezierCurve();
     void avoidObstacle();
     
-    // VALVE TRAJECTORIES
-    bool valve_line_trajectory(double t, KDL::Frame& pos_d, KDL::Twist& vel_d );
-    bool valve_line_initialize(double time, const KDL::Frame& start, const KDL::Frame& final);
-    bool valve_turn_trajectory(double t, KDL::Frame& pos_d, KDL::Twist& vel_d);
-    bool valve_turn_initialize(double time, double radius, double center_angle, const KDL::Frame& start, const KDL::Frame& valve);
-    
-    double valve_circle_trajectory(double t, bool left_arm, KDL::Rotation& ROTe, KDL::Frame& pos_d, KDL::Frame& vel_d);
-    bool valve_circle_initialize(double time, double radius, double center_angle, const KDL::Frame& start);
-    
-    
 private:
     line_parameters line_param;
     circle_parameters circle_param;    
+    custom_circle_parameters custom_circle_param;
     bezier_parameters bezier_param;
-    valve_line_parameters valve_line_param;
-    valve_circle_parameters valve_circle_param;
-    valve_turn_parameters valve_turn_param;
 };    
     
 #endif //TRJ_GEN_H
