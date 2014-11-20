@@ -16,6 +16,7 @@
 #include <tf_conversions/tf_kdl.h>
 #include <tf/tf.h>
 #include <tf/transform_broadcaster.h>
+#include <eigen3/Eigen/Eigen>
 
 bool trajectory_generator::valve_line_initialize(double time, const KDL::Frame& start, const KDL::Frame& final)
 {
@@ -28,6 +29,8 @@ bool trajectory_generator::valve_line_initialize(double time, const KDL::Frame& 
     start.M.GetRPY(r,p,y);
     final.M.GetRPY(r1,p1,y1);
     valve_line_param.displacement.M=KDL::Rotation::RPY(r1-r,p1-p,y1-y);
+    // NOTE using quaternions use the line down here
+//     valve_line_param.displacement.M=final.M;
     valve_line_param.initialized = true;
     return true;
 }
@@ -48,12 +51,17 @@ bool trajectory_generator::valve_line_trajectory(double t, KDL::Frame& pos_d, KD
     start_vector_r.data[0] = ro;
     start_vector_r.data[1] = pi;
     start_vector_r.data[2] = ya;
-    
+        
     double ro_,pi_,ya_;
     valve_line_param.displacement.M.GetRPY(ro_,pi_,ya_);
     dis_vector_r.data[0] = ro_;
     dis_vector_r.data[1] = pi_;
     dis_vector_r.data[2] = ya_;
+    
+    //NOTE for quaternion SLERP
+//     Eigen::Quaternion<double> q_start, q_end, q_interp;
+//     valve_line_param.start.M.GetQuaternion(q_start.x(),q_start.y(),q_start.z(),q_start.w());
+//     valve_line_param.displacement.M.GetQuaternion(q_end.x(),q_end.y(),q_end.z(),q_end.w());
     
     if(t >= 0.0 && t<=valve_line_param.time)
     {
@@ -64,7 +72,10 @@ bool trajectory_generator::valve_line_trajectory(double t, KDL::Frame& pos_d, KD
 	  temp_vel_vector_r = polynomial_interpolation(vel_poly,dis_vector_r,t,valve_line_param.time);
 
 	  pos_d.M = KDL::Rotation::RPY(temp_vector_r.data[0],temp_vector_r.data[1],temp_vector_r.data[2]);
-	  	  
+
+// 	  q_interp = q_start.slerp(t,q_end);
+// 	  pos_d.M = KDL::Rotation::Quaternion(q_interp.x(),q_interp.y(),q_interp.z(),q_interp.w());
+	  
           vel_d.vel=temp_vel_vector_p;
 	  vel_d.rot=temp_vel_vector_r;
     }
@@ -72,6 +83,7 @@ bool trajectory_generator::valve_line_trajectory(double t, KDL::Frame& pos_d, KD
     {
           pos_d.p = valve_line_param.start.p + valve_line_param.displacement.p;
 	  pos_d.M = KDL::Rotation::RPY(start_vector_r.data[0] + dis_vector_r.data[0],start_vector_r.data[1] + dis_vector_r.data[1],start_vector_r.data[2] + dis_vector_r.data[2]);
+// 	  pos_d.M = KDL::Rotation::Quaternion(q_end.x(),q_end.y(),q_end.z(),q_end.w());
 	  
 	  vel_d.vel= KDL::Vector::Zero();
 	  vel_d.rot = KDL::Vector::Zero();
