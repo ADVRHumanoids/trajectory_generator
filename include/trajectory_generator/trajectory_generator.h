@@ -36,8 +36,11 @@ public:
     // GENERIC TRAJECTORIES
     bool line_trajectory(double t, KDL::Frame& pos_d, KDL::Twist& vel_d );
     bool line_initialize(double time, const KDL::Frame& start, const KDL::Frame& final);
+    bool complete_line_trajectory(std::map<double, KDL::Frame>& pos_trj, std::map<double, KDL::Twist>& vel_trj, double delta_t=0.01);
+
     bool circle_trajectory(double t, KDL::Frame& pos_d, KDL::Twist& vel_d);
     bool circle_initialize(double time, double radius, double center_angle, const KDL::Frame& start, const KDL::Frame& object);
+    bool complete_circle_trajectory(std::map<double, KDL::Frame>& pos_trj, std::map<double, KDL::Twist>& vel_trj, double delta_t=0.01);
     
     // CUSTOM CIRCLE
     void custom_circle_trajectory(std::map<double,KDL::Frame>& trj);

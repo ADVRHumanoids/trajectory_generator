@@ -103,6 +103,15 @@ bool trajectory_generator::line_trajectory(double t, KDL::Frame& pos_d, KDL::Twi
     return true;
 }
 
+bool trajectory_generator::complete_line_trajectory(std::map< double, KDL::Frame >& pos_trj, std::map< double, KDL::Twist >& vel_trj, double delta_t)
+{
+	for(double t=0;t<=line_param.time;t=t+delta_t)
+	{
+	    if(!line_trajectory(t, pos_trj[t] , vel_trj[t])) return false;
+	}
+	return true;
+}
+
 bool trajectory_generator::circle_initialize(double time, double radius, double center_angle, const KDL::Frame& start, const KDL::Frame& object)
 {
     if(time<=0) return false;
@@ -144,6 +153,15 @@ bool trajectory_generator::circle_trajectory(double t, KDL::Frame& pos_d, KDL::T
     pos_d = Waist_HandRotating;
     
     return true;
+}
+
+bool trajectory_generator::complete_circle_trajectory(std::map< double, KDL::Frame >& pos_trj, std::map< double, KDL::Twist >& vel_trj, double delta_t)
+{
+	for(double t=0;t<=circle_param.time;t=t+delta_t)
+	{
+	    if(!circle_trajectory(t, pos_trj[t] , vel_trj[t])) return false;
+	}
+	return true;
 }
 
 void trajectory_generator::custom_circle_initialize(double time, KDL::Frame start, const KDL::Frame& displacement, bool left, bool hand, double angle, double radius)
