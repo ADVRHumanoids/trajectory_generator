@@ -175,10 +175,8 @@ void trajectory_generator::custom_circle_initialize(double time, KDL::Frame star
     custom_circle_param.time = time;
 }
 
-void trajectory_generator::custom_circle_trajectory(std::map<double,KDL::Frame>& trj)
+void trajectory_generator::custom_circle_trajectory(double t, KDL::Frame& pos_d)
 {
-    trj.clear();
-  
     polynomial_coefficients poly;
     
     KDL::Frame temp_frame;
@@ -223,7 +221,7 @@ void trajectory_generator::custom_circle_trajectory(std::map<double,KDL::Frame>&
     
     int index_2 = (2*(!custom_circle_param.hand)+custom_circle_param.hand);
     
-    for(double t=0;t<=custom_circle_param.time;t=t+0.01)
+    if(t>=0.0 && t<=custom_circle_param.time)
     {
 	circle_angle = polynomial_interpolation(poly,Xf1,t,custom_circle_param.time);
 	circle_angle = circle_angle - atan2(dis_vector_p.data[index_2],dis_vector_p.data[0]);
@@ -234,40 +232,58 @@ void trajectory_generator::custom_circle_trajectory(std::map<double,KDL::Frame>&
 	
         if(!custom_circle_param.left) //RIGHT
 	{
-	    //Xd_v(0) = -Radius*cos(CircleAngle) ;
-	    //Xd_v(1) = Radius*(sin(CircleAngle));
-	    
 	    temp_vector_p.data[0]=-radius*cos(circle_angle)+mean_x;
 	    temp_vector_p.data[index_2]=radius*sin(circle_angle)+custom_circle_param.hand*mean_y+(!custom_circle_param.hand)*mean_z;
         }
         else //LEFT
 	{
-	    //Xd_v(0) = -Radius*cos(CircleAngle) ;
-	    //Xd_v(1) = -Radius*(sin(CircleAngle));
-
 	    temp_vector_p.data[0]=-radius*cos(circle_angle)+mean_x;
 	    temp_vector_p.data[index_2]=radius*sin(circle_angle)+custom_circle_param.hand*mean_y+(!custom_circle_param.hand)*mean_z;
         }
         
-        //Xd_v(2) = 0.0;
-//         temp_vector_p.data[2] = 0.0 + mean_z;
-
-        //Xd.rows(0,2) = Xinit.rows(0,2) + ROTe*Xd_v.rows(0,2);	
-	
 	temp_frame.p.x(temp_vector_p.data[0]);
 	temp_frame.p.y(temp_vector_p.data[1]);
 	temp_frame.p.z(temp_vector_p.data[2]);
 	temp_frame.M = KDL::Rotation::RPY(temp_vector_r.data[0],temp_vector_r.data[1],temp_vector_r.data[2]);
 
-	trj[t] = temp_frame;
-	//std::cout<<t<<' '<<temp_vector_p.data[0]<<' '<<temp_vector_p.data[1]<<' '<<temp_vector_p.data[2]<<' '<<temp_vector_r.data[0]<<' '<<temp_vector_r.data[1]<<' '<<temp_vector_r.data[2]<<' ';
+	pos_d = temp_frame;
+    }
+    else if (t > circle_param.time)
+    {
+        circle_angle = circle_param.center_angle;
+	circle_angle = circle_angle - atan2(dis_vector_p.data[index_2],dis_vector_p.data[0]);
 
+	temp_vector_p.data[index_1] = start_vector_p.data[index_1] + polynomial_interpolation(poly,dis_vector_p.data[index_1],t,circle_param.time);
 
-    }    
-    //std::cout<<')'<<std::endl;
+	temp_vector_r = start_vector_r + polynomial_interpolation(poly,dis_vector_r,t,custom_circle_param.time);
+
+        if(!custom_circle_param.left) //RIGHT
+	{
+	    temp_vector_p.data[0]=-radius*cos(circle_angle)+mean_x;
+	    temp_vector_p.data[index_2]=radius*sin(circle_angle)+custom_circle_param.hand*mean_y+(!custom_circle_param.hand)*mean_z;
+        }
+        else //LEFT
+	{
+	    temp_vector_p.data[0]=-radius*cos(circle_angle)+mean_x;
+	    temp_vector_p.data[index_2]=radius*sin(circle_angle)+custom_circle_param.hand*mean_y+(!custom_circle_param.hand)*mean_z;
+        }
+
+	temp_frame.p.x(temp_vector_p.data[0]);
+	temp_frame.p.y(temp_vector_p.data[1]);
+	temp_frame.p.z(temp_vector_p.data[2]);
+	temp_frame.M = KDL::Rotation::RPY(temp_vector_r.data[0],temp_vector_r.data[1],temp_vector_r.data[2]);
+
+	pos_d = temp_frame;
+    }
 }
 
-
+void trajectory_generator::complete_custom_circle_trajectory(std::map< double, KDL::Frame >& pos_trj, double delta_t)
+{
+    for(double t=0;t<=custom_circle_param.time;t=t+0.01)
+    {
+	custom_circle_trajectory(t,pos_trj[t]);
+    }
+}
 
 // ************************************************************************************
 // 				BEZIER CURVE METHODS

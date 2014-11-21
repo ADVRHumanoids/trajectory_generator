@@ -41,7 +41,7 @@ void trajectory_generator_thread::compute_line_trj(trj_generator_input_msg& in, 
 void trajectory_generator_thread::compute_custom_circle_trj(trj_generator_input_msg& in, trj_generator_output_msg& out)
 {    
     trj_generator.custom_circle_initialize(in.time, in.start, in.displacement, in.left, in.hand, in.center_angle, in.radius);
-    trj_generator.custom_circle_trajectory(out.trj);
+    trj_generator.complete_custom_circle_trajectory(out.trj);
     
     out.command="result_trj";
 }

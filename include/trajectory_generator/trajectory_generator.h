@@ -43,9 +43,10 @@ public:
     bool complete_circle_trajectory(std::map<double, KDL::Frame>& pos_trj, std::map<double, KDL::Twist>& vel_trj, double delta_t=0.01);
     
     // CUSTOM CIRCLE
-    void custom_circle_trajectory(std::map<double,KDL::Frame>& trj);
+    void custom_circle_trajectory(double t, KDL::Frame& pos_d);
     void custom_circle_initialize(double time, KDL::Frame start, const KDL::Frame& displacement, 
 				  bool left, bool hand, double angle, double radius);
+    void complete_custom_circle_trajectory(std::map<double, KDL::Frame>& pos_trj, double delta_t=0.01);
     
     // BEZIER TRAJECTORIES
     void bezier_initialize(double time, KDL::Frame start, KDL::Frame end);
