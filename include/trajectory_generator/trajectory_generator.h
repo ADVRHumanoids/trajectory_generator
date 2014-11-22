@@ -23,7 +23,11 @@
 #include "bezier_curve.h"
 #include "curves_types.h"
 #include <ros/ros.h>
-    
+#include <tf_conversions/tf_kdl.h>
+#include <tf/tf.h>
+#include <tf/transform_broadcaster.h>
+#include <eigen3/Eigen/Eigen>
+
 class trajectory_generator
 {
 public:
