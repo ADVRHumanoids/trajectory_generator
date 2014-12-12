@@ -164,6 +164,60 @@ bool trajectory_generator::complete_circle_trajectory(std::map< double, KDL::Fra
 	return true;
 }
 
+bool trajectory_generator::foot_initialize(double time, const KDL::Frame& start, const KDL::Frame& final, double height)
+{
+    if(time<=0) return false;
+    
+    foot_param.time=time;
+    foot_param.start = start;
+    foot_param.displacement.p = final.p - start.p;
+    KDL::Vector ctrl1, ctrl2;
+    ctrl1.x((start.p.x() + final.p.x())/4);
+    ctrl1.y((start.p.y() + final.p.y())/4);
+    ctrl1.z((start.p.z() + final.p.z())/4 + height);    
+    ctrl2.x(3*(start.p.x() + final.p.x())/4);
+    ctrl2.y(3*(start.p.y() + final.p.y())/4);
+    ctrl2.z(3*(start.p.z() + final.p.z())/4 + height);
+    foot_param.ctrl_points.push_back(start.p);
+    foot_param.ctrl_points.push_back(ctrl1);
+    foot_param.ctrl_points.push_back(ctrl2);
+    foot_param.ctrl_points.push_back(final.p);
+    foot_param.initialized = true;
+    
+    return true;
+}
+
+bool trajectory_generator::foot_trajectory(double t, KDL::Frame& pos_d)
+{
+    if(t >= 0.0 && t<=foot_param.time)
+    {		
+	pos_d.p.x(0.0);
+	pos_d.p.y(0.0);
+	pos_d.p.z(0.0);
+	for (int j = 0; j < foot_param.ctrl_points.size(); j++)
+	{
+	    KDL::Vector p = foot_param.ctrl_points.at(j);
+	    int n = foot_param.ctrl_points.size();
+	    pos_d.p.x(pos_d.p.x()+ p.x() * (fact(n-1)/(fact(j)*fact(n-1 - j))*pow(t/foot_param.time,j)*pow(1-t/foot_param.time,n-1 -j)));
+	    pos_d.p.y(pos_d.p.y()+ p.y() * (fact(n-1)/(fact(j)*fact(n-1 - j))*pow(t/foot_param.time,j)*pow(1-t/foot_param.time,n-1 -j)));
+	    pos_d.p.z(pos_d.p.z()+ p.z() * (fact(n-1)/(fact(j)*fact(n-1 - j))*pow(t/foot_param.time,j)*pow(1-t/foot_param.time,n-1 -j)));
+	}
+	
+	pos_d.M = KDL::Rotation::Identity();  
+    }
+    else if (t > foot_param.time)
+    {
+	pos_d.p = foot_param.start.p + foot_param.displacement.p;
+	pos_d.M = KDL::Rotation::Identity();  	  
+    }
+    return true;
+}
+
+bool trajectory_generator::complete_foot_trajectory(std::map< double, KDL::Frame >& pos_trj, std::map< double, KDL::Twist >& vel_trj, double delta_t)
+{
+
+}
+
 void trajectory_generator::custom_circle_initialize(double time, KDL::Frame start, const KDL::Frame& displacement, bool left, bool hand, double angle, double radius)
 {
     custom_circle_param.center_angle = angle;
@@ -391,4 +445,9 @@ void trajectory_generator::computeBezierCurve()
 	bezier_param.bz_fun->curve->push_back(bezier_param.bz_fun->q);
     }
     
+}
+
+int trajectory_generator::fact(int x)
+{
+    if (x <= 1) return 1; else return x*fact(x - 1);
 }

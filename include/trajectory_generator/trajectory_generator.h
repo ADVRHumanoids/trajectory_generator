@@ -46,6 +46,10 @@ public:
     bool circle_initialize(double time, double radius, double center_angle, const KDL::Frame& start, const KDL::Frame& object);
     bool complete_circle_trajectory(std::map<double, KDL::Frame>& pos_trj, std::map<double, KDL::Twist>& vel_trj, double delta_t=0.01);
     
+    bool foot_trajectory(double t, KDL::Frame& pos_d);
+    bool foot_initialize(double time, const KDL::Frame& start, const KDL::Frame& final, double height);
+    bool complete_foot_trajectory(std::map<double, KDL::Frame>& pos_trj, std::map<double, KDL::Twist>& vel_trj, double delta_t=0.01);
+    
     // CUSTOM CIRCLE
     void custom_circle_trajectory(double t, KDL::Frame& pos_d);
     void custom_circle_initialize(double time, KDL::Frame start, const KDL::Frame& displacement, 
@@ -60,9 +64,12 @@ public:
     void computeBezierCurve();
     void avoidObstacle();
     
+    int fact(int x);
+    
 private:
     line_parameters line_param;
     circle_parameters circle_param;    
+    foot_traj_parameters foot_param;
     custom_circle_parameters custom_circle_param;
     bezier_parameters bezier_param;
 };    

@@ -85,6 +85,27 @@ public:
     double radius;
 };
 
+class foot_traj_parameters
+{
+public:
+    foot_traj_parameters()
+    {
+	initialized=false;
+	time=1;
+	start.p = KDL::Vector::Zero();
+	start.M = KDL::Rotation::Identity();
+	displacement.p = KDL::Vector::Zero();
+	displacement.M = KDL::Rotation::Identity();
+	ctrl_points.clear();
+    }
+  
+    bool initialized;
+    double time;
+    KDL::Frame start;
+    KDL::Frame displacement;
+    std::vector<KDL::Vector> ctrl_points;
+};
+
 class custom_circle_parameters
 {
 public:
