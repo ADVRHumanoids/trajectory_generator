@@ -178,6 +178,10 @@ bool trajectory_generator::foot_initialize(double time, const KDL::Frame& start,
     ctrl2.x(3*(start.p.x() + final.p.x())/4);
     ctrl2.y(3*(start.p.y() + final.p.y())/4);
     ctrl2.z(3*(start.p.z() + final.p.z())/4 + height);
+    
+    // NOTE THIS LINE MADE ME CRAZY
+    foot_param.ctrl_points.clear();
+    
     foot_param.ctrl_points.push_back(start.p);
     foot_param.ctrl_points.push_back(ctrl1);
     foot_param.ctrl_points.push_back(ctrl2);
