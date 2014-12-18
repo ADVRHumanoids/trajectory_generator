@@ -47,7 +47,7 @@ public:
     bool complete_circle_trajectory(std::map<double, KDL::Frame>& pos_trj, std::map<double, KDL::Twist>& vel_trj, double delta_t=0.01);
     
     bool foot_trajectory(double t, KDL::Frame& pos_d);
-    bool foot_initialize(double time, const KDL::Frame& start, const KDL::Frame& final, double height);
+    bool foot_initialize(double time, const KDL::Frame& start, const KDL::Frame& final, double height, double cp1 = 0.25, double cp2 = 0.75);
     bool complete_foot_trajectory(std::map<double, KDL::Frame>& pos_trj, std::map<double, KDL::Twist>& vel_trj, double delta_t=0.01);
     
     // CUSTOM CIRCLE

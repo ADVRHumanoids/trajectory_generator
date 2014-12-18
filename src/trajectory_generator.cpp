@@ -164,7 +164,7 @@ bool trajectory_generator::complete_circle_trajectory(std::map< double, KDL::Fra
 	return true;
 }
 
-bool trajectory_generator::foot_initialize(double time, const KDL::Frame& start, const KDL::Frame& final, double height)
+bool trajectory_generator::foot_initialize(double time, const KDL::Frame& start, const KDL::Frame& final, double height, double cp1, double cp2)
 {
     if(time<=0) return false;
     
@@ -172,12 +172,12 @@ bool trajectory_generator::foot_initialize(double time, const KDL::Frame& start,
     foot_param.start = start;
     foot_param.displacement.p = final.p - start.p;
     KDL::Vector ctrl1, ctrl2;
-    ctrl1.x((start.p.x() + final.p.x())/4);
-    ctrl1.y((start.p.y() + final.p.y())/4);
-    ctrl1.z((start.p.z() + final.p.z())/4 + height);    
-    ctrl2.x(3*(start.p.x() + final.p.x())/4);
-    ctrl2.y(3*(start.p.y() + final.p.y())/4);
-    ctrl2.z(3*(start.p.z() + final.p.z())/4 + height);
+    ctrl1.x((start.p.x() + final.p.x())*cp1);
+    ctrl1.y((start.p.y() + final.p.y())*cp1);
+    ctrl1.z((start.p.z() + final.p.z())*cp1 + height);    
+    ctrl2.x((start.p.x() + final.p.x())*cp2);
+    ctrl2.y((start.p.y() + final.p.y())*cp2);
+    ctrl2.z((start.p.z() + final.p.z())*cp2 + height);
     
     // NOTE THIS LINE MADE ME CRAZY
     foot_param.ctrl_points.clear();
