@@ -51,12 +51,12 @@ class line_parameters
 public:
     line_parameters()
     {
+    initialized = false;
 	time=1;
 	start.p = KDL::Vector::Zero();
 	start.M = KDL::Rotation::Identity();
 	displacement.p = KDL::Vector::Zero();
 	displacement.M = KDL::Rotation::Identity();
-	initialized = false;
     }
     
     bool initialized;
@@ -111,6 +111,7 @@ class custom_circle_parameters
 public:
     custom_circle_parameters()
     {
+    initialized=false;
 	time=1;
 	start.p = KDL::Vector::Zero();
 	start.M = KDL::Rotation::Identity();
@@ -122,6 +123,7 @@ public:
 	radius=0;
     }
   
+    bool initialized;
     double time;
     KDL::Frame start;
     KDL::Frame displacement;
@@ -138,6 +140,7 @@ public:
     
     bezier_parameters()
     {
+    initialized=false;
 	time=1;
 	start.p = KDL::Vector::Zero();
 	start.M = KDL::Rotation::Identity();
@@ -145,6 +148,7 @@ public:
 	end.M = KDL::Rotation::Identity();
     }
     
+    bool initialized;
     double time;
     KDL::Frame start;
     KDL::Frame end; 

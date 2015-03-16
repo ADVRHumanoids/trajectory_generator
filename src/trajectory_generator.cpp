@@ -231,6 +231,7 @@ void trajectory_generator::custom_circle_initialize(double time, KDL::Frame star
     custom_circle_param.left = left;
     custom_circle_param.radius = radius;
     custom_circle_param.time = time;
+    custom_circle_param.initialized = true;
 }
 
 void trajectory_generator::custom_circle_trajectory(double t, KDL::Frame& pos_d)
@@ -352,6 +353,7 @@ void trajectory_generator::bezier_initialize(double time, KDL::Frame start, KDL:
     bezier_param.time = time;
     bezier_param.start = start;
     bezier_param.end = end;
+    bezier_param.initialized = true;
 }
 
 void trajectory_generator::bezier_trajectory(std::map<double,KDL::Frame>& trj)
@@ -454,4 +456,38 @@ void trajectory_generator::computeBezierCurve()
 int trajectory_generator::fact(int x)
 {
     if (x <= 1) return 1; else return x*fact(x - 1);
+}
+
+KDL::Frame trajectory_generator::Pos(double time)
+{
+    KDL::Frame f;
+    KDL::Twist t;
+
+    if(line_param.initialized)
+        line_trajectory(time, f, t);
+    else if(circle_param.initialized)
+        circle_trajectory(time, f, t);
+    else if(foot_param.initialized)
+        foot_trajectory(time, f);
+    else if(custom_circle_param.initialized)
+        custom_circle_trajectory(time, f);
+
+    return f;
+}
+
+KDL::Twist trajectory_generator::Vel(double time)
+{
+    KDL::Frame f;
+    KDL::Twist t;
+
+    if(line_param.initialized)
+        line_trajectory(time, f, t);
+    else if(circle_param.initialized)
+        circle_trajectory(time, f, t);
+    else if(foot_param.initialized)
+        foot_trajectory(time, f);
+    else if(custom_circle_param.initialized)
+        custom_circle_trajectory(time, f);
+
+    return t;
 }

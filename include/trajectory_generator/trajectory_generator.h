@@ -65,6 +65,20 @@ public:
     void avoidObstacle();
     
     int fact(int x);
+
+    /**
+     * @brief Pos returns position of the trajectory at the specified time
+     * @param time
+     * @return a Frame corresponding to position and orientation of the trajectory at the specified time
+     */
+    KDL::Frame Pos(double time);
+
+    /**
+     * @brief Vel returns position of the trajectory at the specified time
+     * @param time
+     * @return a Frame corresponding to position and orientation of the trajectory at the specified time
+     */
+    KDL::Twist Vel(double time);
     
 private:
     line_parameters line_param;
