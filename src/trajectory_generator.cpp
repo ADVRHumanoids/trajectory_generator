@@ -491,3 +491,19 @@ KDL::Twist trajectory_generator::Vel(double time)
 
     return t;
 }
+
+double trajectory_generator::Duration()
+{
+    double t;
+
+    if(line_param.initialized)
+        t = line_param.time;
+    else if(circle_param.initialized)
+        t = circle_param.time;
+    else if(foot_param.initialized)
+        t = foot_param.time;
+    else if(custom_circle_param.initialized)
+        t = custom_circle_param.time;
+
+    return t;
+}

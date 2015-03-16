@@ -79,6 +79,12 @@ public:
      * @return a Frame corresponding to position and orientation of the trajectory at the specified time
      */
     KDL::Twist Vel(double time);
+
+    /**
+     * @brief Duration returns the duration of the current trajectory
+     * @return duration in seconds of the current trajectory
+     */
+    double Duration();
     
 private:
     line_parameters line_param;
