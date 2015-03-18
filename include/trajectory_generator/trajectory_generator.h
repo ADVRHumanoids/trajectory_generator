@@ -31,7 +31,8 @@
 class trajectory_generator
 {
 public:
-    
+    typedef boost::shared_ptr<trajectory_generator> Ptr;
+
     trajectory_generator();
     
     KDL::Vector polynomial_interpolation(const polynomial_coefficients& poly, const KDL::Vector& vec_f, double time, double t_f);
@@ -87,8 +88,10 @@ public:
     double Duration();
     
 private:
+    void reset_parameters();
+
     line_parameters line_param;
-    circle_parameters circle_param;    
+    circle_parameters circle_param;
     foot_traj_parameters foot_param;
     custom_circle_parameters custom_circle_param;
     bezier_parameters bezier_param;

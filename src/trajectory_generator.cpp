@@ -33,7 +33,9 @@ double trajectory_generator::polynomial_interpolation(const polynomial_coefficie
 bool trajectory_generator::line_initialize(double time, const KDL::Frame& start, const KDL::Frame& final)
 {
     if(time<=0) return false;
-    
+
+    reset_parameters();
+
     line_param.time = time;
     line_param.start = start;
     line_param.displacement.p = final.p-start.p;
@@ -116,6 +118,8 @@ bool trajectory_generator::circle_initialize(double time, double radius, double 
 {
     if(time<=0) return false;
     
+    reset_parameters();
+
     circle_param.time=time;
     circle_param.start = start;
     circle_param.object = object;
@@ -168,6 +172,8 @@ bool trajectory_generator::foot_initialize(double time, const KDL::Frame& start,
 {
     if(time<=0) return false;
     
+    reset_parameters();
+
     foot_param.time=time;
     foot_param.start = start;
     foot_param.displacement.p = final.p - start.p;
@@ -224,6 +230,8 @@ bool trajectory_generator::complete_foot_trajectory(std::map< double, KDL::Frame
 
 void trajectory_generator::custom_circle_initialize(double time, KDL::Frame start, const KDL::Frame& displacement, bool left, bool hand, double angle, double radius)
 {
+    reset_parameters();
+
     custom_circle_param.center_angle = angle;
     custom_circle_param.displacement = displacement;
     custom_circle_param.start = start;
@@ -350,6 +358,8 @@ void trajectory_generator::complete_custom_circle_trajectory(std::map< double, K
 
 void trajectory_generator::bezier_initialize(double time, KDL::Frame start, KDL::Frame end)
 {
+    reset_parameters();
+
     bezier_param.time = time;
     bezier_param.start = start;
     bezier_param.end = end;
@@ -506,4 +516,13 @@ double trajectory_generator::Duration()
         t = custom_circle_param.time;
 
     return t;
+}
+
+void trajectory_generator::reset_parameters()
+{
+    line_param.initialized = false;
+    circle_param.initialized = false;
+    foot_param.initialized = false;
+    custom_circle_param.initialized = false;
+    bezier_param.initialized = false;
 }
