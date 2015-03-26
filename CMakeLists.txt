@@ -42,7 +42,7 @@ find_package(message_generation REQUIRED)
 find_package(catkin REQUIRED COMPONENTS roscpp octomap octomap_ros octomap_msgs tf tf_conversions)
 ## System dependencies are found with CMake's conventions
 find_package(YARP REQUIRED)
-find_package(ICUB REQUIRED)
+find_package(ICUB QUIET)
 find_package(Eigen3 REQUIRED)
 find_package(drc_shared REQUIRED)
 find_package(idynutils REQUIRED)
