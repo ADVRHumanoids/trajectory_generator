@@ -47,7 +47,6 @@ find_package(Eigen3 REQUIRED)
 find_package(drc_shared REQUIRED)
 find_package(idynutils REQUIRED)
 find_package(GYM REQUIRED)
-find_package(kdl_codyco REQUIRED)
 find_package(TinyXML REQUIRED)
 find_package(paramHelp REQUIRED)
 find_package(iDynTree REQUIRED)
@@ -81,7 +80,7 @@ add_library(trajectory_generator_lib SHARED src/trajectory_generator.cpp src/bez
 
 set_target_properties(trajectory_generator_lib PROPERTIES PUBLIC_HEADER "${HEADER_FILES}")
 
-target_link_libraries(trajectory_generator_lib ${kdl_codyco_LIBRARIES} ${catkin_LIBRARIES})
+target_link_libraries(trajectory_generator_lib ${iDynTree_LIBRARIES} ${catkin_LIBRARIES})
 
 #install for superbuild
 target_include_directories(trajectory_generator_lib PUBLIC "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>"
