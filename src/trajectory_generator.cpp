@@ -114,6 +114,110 @@ bool trajectory_generator::complete_line_trajectory(std::map< double, KDL::Frame
 	return true;
 }
 
+bool trajectory_generator::square_initialize(double time, const KDL::Frame& start, const KDL::Frame& final)
+{
+	if(time<=0) return false;
+	
+	reset_parameters();
+	
+	line_param.time = time; // for each movement i will used 1/3 of the total time
+	line_param.start = start;
+	line_param.displacement.p = final.p-start.p;
+	line_param.final = final;
+	double r,p,y,r1,p1,y1;
+	start.M.GetRPY(r,p,y);
+	final.M.GetRPY(r1,p1,y1);
+	line_param.displacement.M=KDL::Rotation::RPY(r1-r,p1-p,y1-y);
+	line_param.initialized = true;
+	return true;
+}
+
+bool trajectory_generator::square_trajectory(double t, KDL::Frame& pos_d, KDL::Twist& vel_d)
+{
+	if(!line_param.initialized) return false;
+
+	polynomial_coefficients poly,vel_poly;
+	vel_poly.set_polynomial_coeff(60.0, -120.0, 60);
+
+	KDL::Vector temp_vector_r, start_vector_r, dis_vector_r;
+
+	KDL::Vector temp_vel_vector_p, temp_vel_vector_r;
+
+	KDL::Frame intermediate_start, intermediate_displacement, intermediate_goal;
+	double scale = 1;
+	if(t < line_param.time/3.0)
+	{
+		intermediate_start = line_param.start;
+		intermediate_goal = KDL::Frame(KDL::Rotation::Identity(),KDL::Vector(0,0,0.1)) * line_param.start;
+	}
+	else if(t < 2.0*line_param.time/3.0)
+	{
+		intermediate_start =  KDL::Frame(KDL::Rotation::Identity(),KDL::Vector(0,0,0.1)) * line_param.start;
+		intermediate_goal = KDL::Frame(KDL::Rotation::Identity(),KDL::Vector(0,0,0.1)) * line_param.final;
+		scale = 2;
+	}
+	else
+	{
+		intermediate_start = KDL::Frame(KDL::Rotation::Identity(),KDL::Vector(0,0,0.1)) * line_param.final;
+		intermediate_goal = line_param.final;
+		scale = 3;
+	}
+
+	intermediate_displacement.p = intermediate_goal.p-intermediate_start.p;
+	double r,p,y,r1,p1,y1;
+	intermediate_start.M.GetRPY(r,p,y);
+	intermediate_goal.M.GetRPY(r1,p1,y1);
+	intermediate_displacement.M=KDL::Rotation::RPY(r1-r,p1-p,y1-y);
+
+	double ro,pi,ya;
+	double ro_,pi_,ya_;
+
+	intermediate_start.M.GetRPY(ro,pi,ya);
+	start_vector_r.data[0] = ro;
+	start_vector_r.data[1] = pi;
+	start_vector_r.data[2] = ya;
+	
+	intermediate_displacement.M.GetRPY(ro_,pi_,ya_);
+	dis_vector_r.data[0] = ro_;
+	dis_vector_r.data[1] = pi_;
+	dis_vector_r.data[2] = ya_;
+
+	if(t >= 0.0 && t<=line_param.time)
+	{
+		double scaled_t = t-(scale-1)*line_param.time/3.0;
+		double scaled_time = line_param.time/3.0;
+
+		pos_d.p = intermediate_start.p + polynomial_interpolation(poly,intermediate_displacement.p,scaled_t,scaled_time);
+		temp_vector_r = start_vector_r + polynomial_interpolation(poly,dis_vector_r,scaled_t,scaled_time);
+		
+		temp_vel_vector_p = polynomial_interpolation(vel_poly,intermediate_displacement.p,scaled_t,scaled_time);
+		temp_vel_vector_r = polynomial_interpolation(vel_poly,dis_vector_r,scaled_t,scaled_time);
+		
+		pos_d.M = KDL::Rotation::RPY(temp_vector_r.data[0],temp_vector_r.data[1],temp_vector_r.data[2]);
+
+		vel_d.vel=temp_vel_vector_p;
+		vel_d.rot=temp_vel_vector_r;
+	}
+	else if (t > line_param.time)
+	{
+		pos_d.p = intermediate_start.p + intermediate_displacement.p;
+		pos_d.M = KDL::Rotation::RPY(start_vector_r.data[0] + dis_vector_r.data[0],start_vector_r.data[1] + dis_vector_r.data[1],start_vector_r.data[2] + dis_vector_r.data[2]);
+		
+		vel_d.vel= KDL::Vector::Zero();
+		vel_d.rot = KDL::Vector::Zero();
+	}
+	return true;
+}
+
+bool trajectory_generator::complete_square_trajectory(std::map< double, KDL::Frame >& pos_trj, std::map< double, KDL::Twist >& vel_trj, double delta_t)
+{
+	for(double t=0;t<=line_param.time;t=t+delta_t)
+	{
+		if(!square_trajectory(t, pos_trj[t] , vel_trj[t])) return false;
+	}
+	return true;
+}
+
 bool trajectory_generator::circle_initialize(double time, double radius, double center_angle, const KDL::Frame& start, const KDL::Frame& object)
 {
     if(time<=0) return false;

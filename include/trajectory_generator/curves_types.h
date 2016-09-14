@@ -57,12 +57,15 @@ public:
 	start.M = KDL::Rotation::Identity();
 	displacement.p = KDL::Vector::Zero();
 	displacement.M = KDL::Rotation::Identity();
+	final.p = KDL::Vector::Zero();
+	final.M = KDL::Rotation::Identity();
     }
     
     bool initialized;
     double time;
     KDL::Frame start;
     KDL::Frame displacement;  
+	KDL::Frame final;
 };
 
 class circle_parameters
