@@ -132,7 +132,7 @@ bool trajectory_generator::square_initialize(double time, const KDL::Frame& star
 	return true;
 }
 
-bool trajectory_generator::square_trajectory(double t, KDL::Frame& pos_d, KDL::Twist& vel_d)
+bool trajectory_generator::square_trajectory(double t, double heigth, KDL::Frame& pos_d, KDL::Twist& vel_d)
 {
 	if(!line_param.initialized) return false;
 
@@ -148,17 +148,17 @@ bool trajectory_generator::square_trajectory(double t, KDL::Frame& pos_d, KDL::T
 	if(t < line_param.time/3.0)
 	{
 		intermediate_start = line_param.start;
-		intermediate_goal = KDL::Frame(KDL::Rotation::Identity(),KDL::Vector(0,0,0.1)) * line_param.start;
+		intermediate_goal = KDL::Frame(KDL::Rotation::Identity(),KDL::Vector(0,0,heigth)) * line_param.start;
 	}
 	else if(t < 2.0*line_param.time/3.0)
 	{
-		intermediate_start =  KDL::Frame(KDL::Rotation::Identity(),KDL::Vector(0,0,0.1)) * line_param.start;
-		intermediate_goal = KDL::Frame(KDL::Rotation::Identity(),KDL::Vector(0,0,0.1)) * line_param.final;
+		intermediate_start =  KDL::Frame(KDL::Rotation::Identity(),KDL::Vector(0,0,heigth)) * line_param.start;
+		intermediate_goal = KDL::Frame(KDL::Rotation::Identity(),KDL::Vector(0,0,heigth)) * line_param.final;
 		scale = 2;
 	}
 	else
 	{
-		intermediate_start = KDL::Frame(KDL::Rotation::Identity(),KDL::Vector(0,0,0.1)) * line_param.final;
+		intermediate_start = KDL::Frame(KDL::Rotation::Identity(),KDL::Vector(0,0,heigth)) * line_param.final;
 		intermediate_goal = line_param.final;
 		scale = 3;
 	}
@@ -209,11 +209,11 @@ bool trajectory_generator::square_trajectory(double t, KDL::Frame& pos_d, KDL::T
 	return true;
 }
 
-bool trajectory_generator::complete_square_trajectory(std::map< double, KDL::Frame >& pos_trj, std::map< double, KDL::Twist >& vel_trj, double delta_t)
+bool trajectory_generator::complete_square_trajectory(std::map< double, KDL::Frame >& pos_trj, std::map< double, KDL::Twist >& vel_trj, double heigth, double delta_t)
 {
 	for(double t=0;t<=line_param.time;t=t+delta_t)
 	{
-		if(!square_trajectory(t, pos_trj[t] , vel_trj[t])) return false;
+		if(!square_trajectory(t, heigth, pos_trj[t] , vel_trj[t])) return false;
 	}
 	return true;
 }
