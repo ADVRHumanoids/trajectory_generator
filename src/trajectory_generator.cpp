@@ -13,7 +13,6 @@
  * limitations under the License.*/
 
 #include <trajectory_generator/trajectory_generator.h>
-#include <../../opt/ros/indigo/include/ros/builtin_message_traits.h>
 
 trajectory_generator::trajectory_generator()
 {
